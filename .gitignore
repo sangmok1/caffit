@@ -38,3 +38,10 @@ next-env.d.ts
 node_modules/
 .next/
 .cache/
+.config/
+.npm/
+.pm2/
+.ssh/
+.vim/
+.bash*
+.pnpm*
