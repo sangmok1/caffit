@@ -15,11 +15,11 @@ $
 
 # Command Line History (newest to oldest):
 :q!
-|2,0,1749540794,,"q!"
+|2,0,1750226168,,"q!"
+:wq!
+|2,0,1750226153,,"wq!"
 :wq
 |2,0,1749539855,,"wq"
-:wq!
-|2,0,1749539822,,"wq!"
 
 # Search String History (newest to oldest):
 ? @$
@@ -34,30 +34,44 @@ $
 # Registers:
 
 # File marks:
-'0  27  0  /etc/nginx/nginx.conf
-|4,48,27,0,1749540794,"/etc/nginx/nginx.conf"
-'1  100  0  /etc/nginx/nginx.conf
-|4,49,100,0,1749539651,"/etc/nginx/nginx.conf"
-'2  74  0  /etc/nginx/nginx.conf
-|4,50,74,0,1749539651,"/etc/nginx/nginx.conf"
-'3  1  0  ~/cat
-|4,51,1,0,1749539525,"~/cat"
+'0  16  4  /etc/nginx/conf.d/nextjs.conf
+|4,48,16,4,1750226168,"/etc/nginx/conf.d/nextjs.conf"
+'1  27  0  /etc/nginx/nginx.conf
+|4,49,27,0,1749540794,"/etc/nginx/nginx.conf"
+'2  100  0  /etc/nginx/nginx.conf
+|4,50,100,0,1749539651,"/etc/nginx/nginx.conf"
+'3  74  0  /etc/nginx/nginx.conf
+|4,51,74,0,1749539651,"/etc/nginx/nginx.conf"
 '4  1  0  ~/cat
 |4,52,1,0,1749539525,"~/cat"
-'5  8  0  /etc/nginx/conf.d
-|4,53,8,0,1749539344,"/etc/nginx/conf.d"
+'5  1  0  ~/cat
+|4,53,1,0,1749539525,"~/cat"
 '6  8  0  /etc/nginx/conf.d
 |4,54,8,0,1749539344,"/etc/nginx/conf.d"
-'7  1  0  ~/logs/letsencrypt.log.5
-|4,55,1,0,1749532514,"~/logs/letsencrypt.log.5"
+'7  8  0  /etc/nginx/conf.d
+|4,55,8,0,1749539344,"/etc/nginx/conf.d"
 '8  1  0  ~/logs/letsencrypt.log.5
 |4,56,1,0,1749532514,"~/logs/letsencrypt.log.5"
+'9  1  0  ~/logs/letsencrypt.log.5
+|4,57,1,0,1749532514,"~/logs/letsencrypt.log.5"
 
 # Jumplist (newest first):
+-'  16  4  /etc/nginx/conf.d/nextjs.conf
+|4,39,16,4,1750226168,"/etc/nginx/conf.d/nextjs.conf"
+-'  1  0  /etc/nginx/conf.d/nextjs.conf
+|4,39,1,0,1750226130,"/etc/nginx/conf.d/nextjs.conf"
+-'  27  0  /etc/nginx/nginx.conf
+|4,39,27,0,1749540794,"/etc/nginx/nginx.conf"
 -'  27  0  /etc/nginx/nginx.conf
 |4,39,27,0,1749540794,"/etc/nginx/nginx.conf"
 -'  1  0  /etc/nginx/nginx.conf
 |4,39,1,0,1749539800,"/etc/nginx/nginx.conf"
+-'  1  0  /etc/nginx/nginx.conf
+|4,39,1,0,1749539800,"/etc/nginx/nginx.conf"
+-'  100  0  /etc/nginx/nginx.conf
+|4,39,100,0,1749539651,"/etc/nginx/nginx.conf"
+-'  74  0  /etc/nginx/nginx.conf
+|4,39,74,0,1749539651,"/etc/nginx/nginx.conf"
 -'  100  0  /etc/nginx/nginx.conf
 |4,39,100,0,1749539651,"/etc/nginx/nginx.conf"
 -'  74  0  /etc/nginx/nginx.conf
@@ -66,6 +80,12 @@ $
 |4,39,97,0,1749539631,"/etc/nginx/nginx.conf"
 -'  71  0  /etc/nginx/nginx.conf
 |4,39,71,0,1749539631,"/etc/nginx/nginx.conf"
+-'  97  0  /etc/nginx/nginx.conf
+|4,39,97,0,1749539631,"/etc/nginx/nginx.conf"
+-'  71  0  /etc/nginx/nginx.conf
+|4,39,71,0,1749539631,"/etc/nginx/nginx.conf"
+-'  1  0  /etc/nginx/nginx.conf
+|4,39,1,0,1749539538,"/etc/nginx/nginx.conf"
 -'  1  0  /etc/nginx/nginx.conf
 |4,39,1,0,1749539538,"/etc/nginx/nginx.conf"
 -'  1  0  ~/cat
@@ -74,6 +94,12 @@ $
 |4,39,1,0,1749539525,"~/cat"
 -'  1  0  ~/cat
 |4,39,1,0,1749539525,"~/cat"
+-'  1  0  ~/cat
+|4,39,1,0,1749539525,"~/cat"
+-'  1  0  ~/cat
+|4,39,1,0,1749539525,"~/cat"
+-'  1  0  ~/cat
+|4,39,1,0,1749539525,"~/cat"
 -'  8  0  /etc/nginx/conf.d
 |4,39,8,0,1749539344,"/etc/nginx/conf.d"
 -'  8  0  /etc/nginx/conf.d
@@ -84,6 +110,34 @@ $
 |4,39,8,0,1749539344,"/etc/nginx/conf.d"
 -'  8  0  /etc/nginx/conf.d
 |4,39,8,0,1749539344,"/etc/nginx/conf.d"
+-'  8  0  /etc/nginx/conf.d
+|4,39,8,0,1749539344,"/etc/nginx/conf.d"
+-'  8  0  /etc/nginx/conf.d
+|4,39,8,0,1749539344,"/etc/nginx/conf.d"
+-'  8  0  /etc/nginx/conf.d
+|4,39,8,0,1749539344,"/etc/nginx/conf.d"
+-'  8  0  /etc/nginx/conf.d
+|4,39,8,0,1749539344,"/etc/nginx/conf.d"
+-'  8  0  /etc/nginx/conf.d
+|4,39,8,0,1749539344,"/etc/nginx/conf.d"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
+-'  1  0  ~/logs/letsencrypt.log.5
+|4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
 -'  1  0  ~/logs/letsencrypt.log.5
 |4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
 -'  1  0  ~/logs/letsencrypt.log.5
@@ -104,6 +158,15 @@ $
 |4,39,1,0,1749532514,"~/logs/letsencrypt.log.5"
 
 # History of marks within files (newest to oldest):
+
+> /etc/nginx/conf.d/nextjs.conf
+	*	1750226167	0
+	"	16	4
+	^	16	5
+	.	16	4
+	+	10	0
+	+	17	0
+	+	16	4
 
 > /etc/nginx/nginx.conf
 	*	1749540792	0

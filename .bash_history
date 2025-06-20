@@ -380,3 +380,150 @@ pnpm add -g pm2
 npm install -g pm2
 sudo systemctl enable crond
 sudo systemctl start crond
+rm -rf .git
+git init
+git add .
+git commit -m "Clean initial commit"
+git remote add origin https://github.com/sangmok1/caffit.git
+git branch -M main
+git push -u origin main --force
+git rm --cached -r .config .npm .pm2 .ssh .vim .bash_profile .bashrc .bash_logout .pnpm*
+   git add .gitignore
+   git commit -m "Remove unwanted files and update .gitignore"
+   git push -u origin main --force
+git add .
+git commit -m "Clean initial commit"
+git remote add origin https://github.com/sangmok1/caffit.git
+git branch -M main
+git push -u origin main --force
+git reset --hard
+git rm --cached -r .local .vscode-server .cursor-server .nvm node_modules .next .cache
+git push -u origin main --force
+git add .gitignore
+git commit -m "Remove large files and add to .gitignore"
+git rm --cached -r .local .vscode-server .cursor-server .nvm node_modules .next .cache
+git credential-cache exit
+git config --global --unset credential.helper
+   git push -u origin main --force
+git add .gitignore
+git commit -m "Remove large files and update .gitignore"
+git push -u origin main --force
+git add .gitignore
+git commit -m "Remove pnpm cache from git"
+git push -u origin main --force
+git credential-cache exit
+git status
+git push origin
+git push -u origin main --force
+   git branch -M main
+   git push -u origin main --force
+   git remote add origin https://github.com/sangmok1/caffit.git
+   git add .
+   rm -f /home/ec2-user/.git/index.lock
+   git add .
+git status
+git commit -m "Initial project"
+git push origin 
+git init
+git remote add origin https://github.com/sangmok1/caffit.git
+git add .
+git status
+git add .
+git status
+git commit -m "Initial project"
+git status
+git commit -m "Initinal project"
+git init
+sudo yum install -y git
+  pm2 restart next-app
+ls -l /home/ec2-user/public/
+ls -l /home/ec2-user/public/favicon.ico
+pm2 restart next-app
+git rm --cached -r .config .npm .pm2 .ssh .vim .bash_profile .bashrc .bash_logout .pnpm*
+git add .gitignore
+git commit -m "Remove unwanted files and update .gitignore"
+git rm --cached -r .config .npm .pm2 .ssh .vim .bash_profile .bashrc .bash_logout .pnpm*
+git add .gitignore
+git commit -m "Remove unwanted files and update .gitignore"
+     git rm --cached -r .config .npm .pm2 .ssh .vim .bash_profile .bashrc .bash_logout .pnpm*
+     git add .gitignore
+     git commit -m "Remove unwanted files and update .gitignore"
+     git push -u origin main --force
+git rm --cached -r .config .npm .pm2 .ssh .vim .bash_profile .bashrc .bash_logout .pnpm*
+git add .gitignore
+git commit -m "Remove unwanted files and update .gitignore"
+git status
+git rm --cached -r .config .npm .pm2 .ssh .vim
+git status
+git add .gitignore
+git commit -m "Remove unwanted files and update .gitignore"
+git push -u origin main --force
+  pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pm2 restart next-app
+ls -la public/favicon*
+pm2 stop next-app
+pnpm build
+pm2 start "pnpm start" --name next-app
+pm2 delete 0
+pm2 restart next-app
+pm2 stop next-app
+pnpm build
+pm2 start "pnpm start" --name next-app
+pm2 restart 2
+pm2 stop 2
+rm -rf .next
+pnpm build
+pm2 start "pnpm start" --name next-app
+pm2 delete 1 && pm2 delete 2
+pm2 restart 3
+pm2 stop 3
+rm -rf .next
+pnpm build
+pm2 start "pnpm start" --name next-app
+pm2 delete 3
+pm2 logs 4 --lines 10
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pm2 restart 4
+pm2 logs 4 --lines 5
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pm2 restart 4
+pm2 logs 4 --lines 3 --nostream
+pm2 restart 4
+mysql -u root -e "SHOW VARIABLES LIKE 'collation%';"
+pm2 restart all
+pm2 start "pnpm start" --name next-app
+   pm2 save
+sudo pm2 startup
+sudo  pm2 save
+sudo pm2 save
+  ls -l /home/ec2-user/public/favicon.svg
+  pm2 restart next-app
+pm2 restart next-app
+pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+cd /home/ec2-user && pm2 restart all
+mysql -u root -p'your_secure_password' -D caffit -e "SELECT store, COUNT(*) as count FROM coffee_menus WHERE store = 'Mega' GROUP BY store;"
+curl "http://localhost:3000/api/coffee-menus?store=Mega&pageSize=5" | head -20
+cd /home/ec2-user && pm2 stop all
+pnpm build
+pm2 start pnpm --name "next-app" -- start
+pm2 delete 4
+ls
+pm2 restart next-app
+sudo systemctl restart nginx
+  curl http://localhost:3000/robots.txt
+cd /etc/nginx/conf.d/nextjs.conf
+vi /etc/nginx/conf.d/nextjs.conf
+sudo vi /etc/nginx/conf.d/nextjs.conf
+sudo systemctl restart nginx
+cat /etc/nginx/conf.d/nextjs.conf
+   chmod 644 /home/ec2-user/public/robots.txt
+   chmod 755 /home/ec2-user/public
+   chmod 755 /home/ec2-user
+   pnpm build
+   pm2 restart next-app
+pnpm build && pm2 restart next-app
+pnpm build && pm2 restart next-app
+pnpm build && pm2 restart next-app
+pnpm build && pm2 restart next-app

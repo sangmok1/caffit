@@ -7,6 +7,8 @@ const dbConfig = {
   user: process.env.DB_USER!,
   password: process.env.DB_PASSWORD!,
   database: process.env.DB_NAME!,
+  charset: 'utf8mb4',
+  collation: 'utf8mb4_unicode_ci'
 }
 
 // Create a connection pool
@@ -76,7 +78,7 @@ export async function fetchCoffeeMenus({
     }
     // 데이터 쿼리
     const [rows] = await connection.query(
-      `SELECT name, eng_name, kcal, caffeine, sodium, sugars, store FROM coffee_info ${where} ORDER BY ${orderBySql} ${orderDir} LIMIT ? OFFSET ?`,
+      `SELECT name, eng_name, kcal, caffeine, sodium, sugars, protein, store FROM coffee_info ${where} ORDER BY ${orderBySql} ${orderDir} LIMIT ? OFFSET ?`,
       [...params, pageSize, offset]
     )
     // 전체 개수 쿼리
@@ -94,7 +96,7 @@ export async function fetchCoffeeMenus({
       caffeine: Number(row.caffeine) || 0,
       sodium: Number(row.sodium) || 0,
       sugars: Number(row.sugars) || 0,
-      protein: 0,
+      protein: Number(row.protein) || 0,
       trans_fat: 0,
       sat_fat: 0,
       store: row.store || "",
