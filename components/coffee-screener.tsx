@@ -16,6 +16,7 @@ const cafes: CafeItem[] = [
   { name: "Starbucks", store: "Starbucks", color: "#00704A", image: "/starbucks-logo.png" },
   { name: "Gong Cha", store: "gongcha", color: "#FF6B35", image: "/gongcha-logo.png" },
   { name: "MEGA", store: "Mega", color: "#4A90E2", image: "/mega-logo.png" },
+  { name: "Compose", store: "Compose", color: "#8B4513", image: "/compose-logo.png" },
 //   { name: "Paik's", color: "#8B4513", emoji: "☕" },
 ]
 
@@ -69,18 +70,66 @@ export default function CoffeeScreener() {
   const [kcalMax, setKcalMax] = useState("")
   const [sugarMin, setSugarMin] = useState("")
   const [sugarMax, setSugarMax] = useState("")
+  // debounced 값들 (실제 API 호출에 사용)
+  const [debouncedKcalMin, setDebouncedKcalMin] = useState("")
+  const [debouncedKcalMax, setDebouncedKcalMax] = useState("")
+  const [debouncedSugarMin, setDebouncedSugarMin] = useState("")
+  const [debouncedSugarMax, setDebouncedSugarMax] = useState("")
   const [loading, setLoading] = useState(true)
+  const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState("")
   const [sortField, setSortField] = useState<string>("eng_name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [maxKcal, setMaxKcal] = useState(800)
+  const [maxSugars, setMaxSugars] = useState(50)
 
-  // 데이터 fetch
+  // 최대값 fetch
+  useEffect(() => {
+    const loadMaxValues = async () => {
+      try {
+        const res = await fetch('/api/max-values')
+        const result = await res.json()
+        setMaxKcal(result.maxKcal)
+        setMaxSugars(result.maxSugars)
+      } catch (err) {
+        console.error("Failed to load max values:", err)
+      }
+    }
+    loadMaxValues()
+  }, [])
+
+  // 슬라이더 값들에 대한 debounce 효과
+  useEffect(() => {
+    // 슬라이더 값이 변경되면 즉시 searching 상태로 변경 (단, 초기 로딩이 끝난 후에만)
+    const hasSliderChange = kcalMin || kcalMax || sugarMin || sugarMax
+    if (hasSliderChange && !loading) {
+      setIsSearching(true)
+    }
+
+    const timer = setTimeout(() => {
+      setDebouncedKcalMin(kcalMin)
+      setDebouncedKcalMax(kcalMax)
+      setDebouncedSugarMin(sugarMin)
+      setDebouncedSugarMax(sugarMax)
+      setIsSearching(false) // 검색 완료 후 searching 상태 해제
+    }, 1000) // 1초 딜레이
+
+    return () => clearTimeout(timer) // 새로운 값이 들어오면 이전 타이머 취소
+  }, [kcalMin, kcalMax, sugarMin, sugarMax, loading])
+
+  // 데이터 fetch (debounced 값들 사용)
   useEffect(() => {
     const loadCoffees = async () => {
       try {
-        setLoading(true)
+        // 슬라이더 변경이 아닌 경우 또는 카페 선택/검색/정렬/페이지 변경시 loading 상태 설정
+        const isSliderChange = debouncedKcalMin || debouncedKcalMax || debouncedSugarMin || debouncedSugarMax
+        const isNonSliderChange = searchTerm || selectedCafe || sortField !== 'eng_name' || page !== 1
+        if (!isSliderChange || isNonSliderChange) {
+          setLoading(true)
+        }
+        
         const params = new URLSearchParams({
           page: String(page),
           pageSize: String(PAGE_SIZE),
@@ -89,10 +138,10 @@ export default function CoffeeScreener() {
         })
         if (searchTerm) params.append('search', searchTerm)
         if (selectedCafe) params.append('store', selectedCafe)
-        if (kcalMin) params.append('kcalMin', kcalMin)
-        if (kcalMax) params.append('kcalMax', kcalMax)
-        if (sugarMin) params.append('sugarMin', sugarMin)
-        if (sugarMax) params.append('sugarMax', sugarMax)
+        if (debouncedKcalMin) params.append('kcalMin', debouncedKcalMin)
+        if (debouncedKcalMax) params.append('kcalMax', debouncedKcalMax)
+        if (debouncedSugarMin) params.append('sugarMin', debouncedSugarMin)
+        if (debouncedSugarMax) params.append('sugarMax', debouncedSugarMax)
         const res = await fetch(`/api/coffee-menus?${params.toString()}`)
         const result = await res.json()
         setCoffees(result.data)
@@ -104,7 +153,7 @@ export default function CoffeeScreener() {
       }
     }
     loadCoffees()
-  }, [page, searchTerm, selectedCafe, kcalMin, kcalMax, sugarMin, sugarMax, sortField, sortDirection])
+  }, [page, searchTerm, selectedCafe, debouncedKcalMin, debouncedKcalMax, debouncedSugarMin, debouncedSugarMax, sortField, sortDirection])
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -117,6 +166,20 @@ export default function CoffeeScreener() {
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
+
+  // 카페별 브랜드 컬러 가져오기 함수
+  const getCafeColor = (storeName: string): string => {
+    const cafeMap: { [key: string]: string } = {
+      'Starbucks': 'rgb(17,81,27)', // 진녹색
+      'starbucks': 'rgb(17,81,27)', // 진녹색 (소문자)
+      'gongcha': '#E31E24',   // 빨강
+      'Mega': '#FFD700',      // 찐노랑
+      'Compose': '#8B4513',
+      'EDIYA': '#B08E6A',
+      'Paik\'s': '#8B4513'
+    }
+    return cafeMap[storeName] || '#C8A27A' // 기본 컬러
+  }
 
   // UI
   return (
@@ -141,93 +204,125 @@ export default function CoffeeScreener() {
       </div>
 
       {/* 카페 필터 */}
-      <div className="flex flex-wrap gap-6 justify-center mb-6">
+      <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mb-6 max-w-4xl mx-auto">
         {cafes.map((cafe) => (
           <button
             key={cafe.name}
-            onClick={() => setSelectedCafe(selectedCafe === cafe.store ? null : cafe.store)}
-            className={`flex flex-col items-center bg-transparent border-none shadow-none outline-none transition-all
+            onClick={() => {
+              const newCafe = selectedCafe === cafe.store ? null : cafe.store
+              setSelectedCafe(newCafe)
+              setPage(1) // 페이지를 1로 리셋
+            }}
+            className={`cafe-button flex flex-col items-center bg-transparent border-none shadow-none outline-none transition-all
               ${selectedCafe === cafe.store ? "scale-110 opacity-100" : selectedCafe === null ? "opacity-80 hover:opacity-100" : "opacity-50 sm:opacity-80 hover:opacity-100"}
             `}
             style={{
-              minWidth: 56,
-              minHeight: 80,
+              minHeight: 70,
               background: "none",
-              boxShadow: "none",
+              boxShadow: "none", 
               border: "none",
               cursor: "pointer",
-              padding: "18px 10px 12px 10px"
+              padding: "8px 4px"
             }}
           >
             {cafe.image ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 58, height: 68 }}>
-                {cafe.name === 'EDIYA' ? (
-                  <img src={cafe.image} alt={cafe.name} style={{ width: 75, height: 88, maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', padding: 0, background: 'none' }} />
-                ) : (
-                  <img src={cafe.image} alt={cafe.name} style={{ width: 58, height: 68, objectFit: 'contain', padding: 0, background: 'none' }} />
-                )}
+              <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-20">
+                <img 
+                  src={cafe.image} 
+                  alt={cafe.name} 
+                  className="w-full h-full object-contain"
+                  style={{ padding: 0, background: 'none' }} 
+                />
               </div>
             ) : (
-              cafe.emoji ? <span className="text-3xl mb-2" style={{ color: cafe.color }}>{cafe.emoji}</span> : null
+              cafe.emoji ? <span className="text-2xl sm:text-4xl mb-1 sm:mb-2" style={{ color: cafe.color }}>{cafe.emoji}</span> : null
             )}
-            {cafe.name !== "Starbucks" && cafe.name !== "Gong Cha" && cafe.name !== "EDIYA" && cafe.name !== "MEGA" && cafe.name !== "" && (
-              <span className="text-xs" style={{ color: cafe.color }}>{cafe.name}</span>
+            {cafe.name !== "Starbucks" && cafe.name !== "Gong Cha" && cafe.name !== "EDIYA" && cafe.name !== "MEGA" && cafe.name !== "Compose" && (
+              <span className="text-xs text-center mt-1" style={{ color: cafe.color }}>{cafe.name}</span>
             )}
           </button>
         ))}
       </div>
 
       {/* 필터 바 */}
-      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 items-center justify-center bg-[#F8F6F2] rounded-lg p-6 mb-10" style={{ minHeight: 70 }}>
+      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-2 sm:gap-4 items-center justify-center bg-[#F8F6F2] rounded-lg p-6 mb-10 overflow-hidden" style={{ minHeight: 70 }}>
         <input
           type="text"
           placeholder="Menu name search"
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-          className="border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#C8A27A] w-full sm:w-auto mb-2 sm:mb-0"
+          className="border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#C8A27A] w-full sm:w-auto mb-2 sm:mb-0 sm:flex-shrink-0"
         />
-        <div className="flex w-full sm:w-auto mb-2 sm:mb-0 items-center">
-          <span className="text-sm text-[#8D6E63] mr-2">kcal</span>
-          <input
-            type="number"
-            placeholder="min"
-            value={kcalMin}
-            onChange={(e) => { setKcalMin(e.target.value); setPage(1); }}
-            className="border rounded px-2 py-2 w-20 sm:w-16 text-base focus:outline-none focus:ring-2 focus:ring-[#C8A27A]"
-          />
-          <span className="mx-1 text-[#8D6E63]">~</span>
-          <input
-            type="number"
-            placeholder="max"
-            value={kcalMax}
-            onChange={(e) => { setKcalMax(e.target.value); setPage(1); }}
-            className="border rounded px-2 py-2 w-20 sm:w-16 text-base focus:outline-none focus:ring-2 focus:ring-[#C8A27A]"
-          />
+        <div className="flex flex-col w-full sm:w-48 mb-4 sm:mb-0 sm:flex-shrink-0">
+          <span className="text-sm text-[#8D6E63] mb-2 text-center">kcal: {kcalMin || 0} ~ {kcalMax || maxKcal}</span>
+          <div className="relative touch-none">
+            <input
+              type="range"
+              min="0"
+              max={maxKcal}
+              value={Number(kcalMin) || 0}
+              onChange={(e) => { setKcalMin(e.target.value === "0" ? "" : e.target.value); setPage(1); }}
+              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb-1"
+              style={{
+                background: `linear-gradient(to right, #C8A27A 0%, #C8A27A ${((Number(kcalMin) || 0) / maxKcal) * 100}%, #e5e7eb ${((Number(kcalMin) || 0) / maxKcal) * 100}%, #e5e7eb 100%)`
+              }}
+            />
+            <input
+              type="range"
+              min="0"
+              max={maxKcal}
+              value={Number(kcalMax) || maxKcal}
+              onChange={(e) => { setKcalMax(e.target.value === String(maxKcal) ? "" : e.target.value); setPage(1); }}
+              className="absolute w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer slider-thumb-2"
+            />
+          </div>
         </div>
-        <div className="flex w-full sm:w-auto mb-2 sm:mb-0 items-center">
-          <span className="text-sm text-[#8D6E63] mr-2">Sugar</span>
-          <input
-            type="number"
-            placeholder="min"
-            value={sugarMin}
-            onChange={(e) => { setSugarMin(e.target.value); setPage(1); }}
-            className="border rounded px-2 py-2 w-20 sm:w-16 text-base focus:outline-none focus:ring-2 focus:ring-[#C8A27A]"
-          />
-          <span className="mx-1 text-[#8D6E63]">~</span>
-          <input
-            type="number"
-            placeholder="max"
-            value={sugarMax}
-            onChange={(e) => { setSugarMax(e.target.value); setPage(1); }}
-            className="border rounded px-2 py-2 w-20 sm:w-16 text-base focus:outline-none focus:ring-2 focus:ring-[#C8A27A]"
-          />
+        <div className="flex flex-col w-full sm:w-48 mb-4 sm:mb-0 sm:flex-shrink-0">
+          <span className="text-sm text-[#8D6E63] mb-2 text-center">Sugar: {sugarMin || 0}g ~ {sugarMax || maxSugars}g</span>
+          <div className="relative touch-none">
+            <input
+              type="range"
+              min="0"
+              max={maxSugars}
+              value={Number(sugarMin) || 0}
+              onChange={(e) => { setSugarMin(e.target.value === "0" ? "" : e.target.value); setPage(1); }}
+              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb-1"
+              style={{
+                background: `linear-gradient(to right, #C8A27A 0%, #C8A27A ${((Number(sugarMin) || 0) / maxSugars) * 100}%, #e5e7eb ${((Number(sugarMin) || 0) / maxSugars) * 100}%, #e5e7eb 100%)`
+              }}
+            />
+            <input
+              type="range"
+              min="0"
+              max={maxSugars}
+              value={Number(sugarMax) || maxSugars}
+              onChange={(e) => { setSugarMax(e.target.value === String(maxSugars) ? "" : e.target.value); setPage(1); }}
+              className="absolute w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer slider-thumb-2"
+            />
+          </div>
         </div>
         {/* Clear All Filter 버튼 - 웹에서는 오른쪽에, 모바일에서는 아래에 */}
         <button
           onClick={() => {
-            setSearchTerm(""); setKcalMin(""); setKcalMax(""); setSugarMin(""); setSugarMax(""); setSelectedCafe(null); setPage(1);
+            try {
+              setSearchTerm("")
+              setKcalMin("")
+              setKcalMax("")
+              setSugarMin("")
+              setSugarMax("")
+              // debounced 값들도 즉시 초기화하여 바로 결과 표시
+              setDebouncedKcalMin("")
+              setDebouncedKcalMax("")
+              setDebouncedSugarMin("")
+              setDebouncedSugarMax("")
+              setSelectedCafe(null)
+              setPage(1)
+              setIsSearching(false) // 검색 상태도 리셋
+            } catch (error) {
+              console.error("Clear filters error:", error)
+            }
           }}
-          className="w-full sm:w-auto px-4 py-2 rounded bg-[#C8A27A] text-white text-sm font-semibold hover:bg-[#B08E6A] transition"
+          className="w-full sm:w-auto px-4 py-2 rounded bg-[#C8A27A] text-white text-sm font-semibold hover:bg-[#B08E6A] transition sm:flex-shrink-0"
         >
           Clear all filters
         </button>
@@ -236,16 +331,32 @@ export default function CoffeeScreener() {
       {/* 메뉴 리스트 */}
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-4">
         {loading ? (
-          <div className="text-center py-12 text-[#C8A27A] text-lg">로딩 중...</div>
+          <div className="text-center py-12">
+            <div className="flex justify-center items-center space-x-2 mb-3">
+              <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            </div>
+            <p className="text-[#8D6E63]">커피 메뉴를 불러오는 중...</p>
+          </div>
         ) : error ? (
           <div className="text-center py-12 text-red-600">{error}</div>
+        ) : isSearching ? (
+          <div className="text-center py-12">
+            <div className="flex justify-center items-center space-x-2 mb-3">
+              <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            </div>
+            <p className="text-[#8D6E63]">검색 중...</p>
+          </div>
         ) : coffees.length === 0 ? (
           <div className="text-center py-12 text-[#8D6E63]">조건에 맞는 메뉴가 없습니다.</div>
         ) : (
           <>
             <div className="overflow-x-auto bg-white rounded-lg">
               <table className="w-full table-fixed text-sm">
-                <thead>
+                <thead className="sticky top-0 z-10">
                   <tr className="bg-[#F5E9D9] text-[#5D4037]">
                     <th className="py-2 text-center cursor-pointer w-[25%] md:w-auto text-base font-normal" onClick={() => handleSort("name")}> 
                       <div className="flex flex-col items-center md:flex-row md:justify-center">
@@ -418,10 +529,26 @@ export default function CoffeeScreener() {
                     else if (health_score >= 41) health_emoji = '🟠'
                     return (
                       <tr key={c.id} className="border-b hover:bg-[#F5E9D9] cursor-pointer">
-                        <td className="py-2 text-[#5D4037] text-left break-words whitespace-normal w-[25%] md:w-auto">
-                          <span className="break-words whitespace-normal block">{c.name}</span>
-                          <div className="text-xs text-[#8D6E63] break-words whitespace-normal">{c.eng_name}</div>
-                          <div className="text-xs text-[#B08E6A]">{c.kcal}kcal</div>
+                        <td className="py-2 text-[#5D4037] text-left break-words whitespace-normal w-[25%] md:w-auto relative">
+                          {/* 카페 브랜드 컬러 바 - 왼쪽 세로 (위아래 10%씩 줄임) */}
+                          <div 
+                            className="absolute left-0"
+                            style={{ 
+                              width: '3px',
+                              top: '10%',
+                              bottom: '10%',
+                              ...(c.store === 'Compose' 
+                                ? { background: 'linear-gradient(to bottom, #FFD700 50%, #8B4513 50%)' }
+                                : { backgroundColor: getCafeColor(c.store) }
+                              ),
+                              opacity: 0.8
+                            }}
+                          ></div>
+                          <div className="pl-3">
+                            <span className="break-words whitespace-normal block">{c.name}</span>
+                            <div className="text-xs text-[#8D6E63] break-words whitespace-normal">{c.eng_name}</div>
+                            <div className="text-xs text-[#B08E6A]">{c.kcal}kcal</div>
+                          </div>
                         </td>
                         <td className="py-2 text-center w-[18.75%] md:w-auto">
                           <div className="flex flex-col items-center md:flex-row md:justify-center">

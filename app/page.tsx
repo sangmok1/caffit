@@ -5,9 +5,11 @@ import type { Metadata } from "next"
 import CoffeeScreener from "@/components/coffee-screener"
 import PWARegister from "@/components/pwa-register"
 import SplashScreen from "@/components/splash-screen"
+import ContactUs from "@/components/contact-us"
 
 export default function Page() {
   const [showSplash, setShowSplash] = useState(false)
+  const [isContactOpen, setIsContactOpen] = useState(false)
 
   useEffect(() => {
     // 모바일 환경 감지 (PWA 또는 모바일 브라우저)
@@ -39,10 +41,38 @@ export default function Page() {
               <div className="h-1 w-24 bg-[#C8A27A] rounded-full"></div>
             </div>
           </header>
-          <CoffeeScreener />
-          <PWARegister />
+                  <CoffeeScreener />
+        
+        {/* 하단 링크 - 더 명확하게 표시 */}
+        <div className="max-w-5xl mx-auto text-center mt-16 mb-12 py-8 border-t border-[#E6D9CC]">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-[#8D6E63]">
+            <a 
+              href="/privacy-policy" 
+              className="hover:text-[#C8A27A] transition-colors underline"
+            >
+              개인정보 처리방침
+            </a>
+            <span className="hidden sm:inline">|</span>
+            <button
+              onClick={() => setIsContactOpen(true)}
+              className="hover:text-[#C8A27A] transition-colors underline"
+            >
+              Contact Us
+            </button>
+            <span className="hidden sm:inline">|</span>
+            <span>ⓒ Caffit.</span>
+          </div>
         </div>
+        
+        <PWARegister />
+        
+        {/* Contact Us 팝업 */}
+        <ContactUs 
+          isOpen={isContactOpen} 
+          onClose={() => setIsContactOpen(false)} 
+        />
       </div>
+    </div>
     </>
   )
 }

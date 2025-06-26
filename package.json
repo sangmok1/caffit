@@ -15,11 +15,13 @@
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@radix-ui/react-toast": "^1.2.14",
+    "@types/nodemailer": "^6.4.17",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.513.0",
     "mysql2": "^3.14.1",
     "next": "^15.3.3",
+    "nodemailer": "^7.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.0",

@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,8 +60,100 @@
   }
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&display=swap");
-
 .font-serif {
   font-family: "Playfair Display", serif;
+}
+
+/* Range Slider Styles */
+.slider-thumb-1::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  background: #C8A27A;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 2px solid white;
+  z-index: 2;
+  position: relative;
+}
+
+.slider-thumb-2::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  background: #B08E6A;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 2px solid white;
+  z-index: 3;
+  position: relative;
+}
+
+.slider-thumb-1::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  background: #C8A27A;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 2px solid white;
+}
+
+.slider-thumb-2::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  background: #B08E6A;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 2px solid white;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  background: transparent;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-track {
+  height: 8px;
+  background: transparent;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 8px;
+  background: transparent;
+  border: none;
+}
+
+/* 슬라이더 터치 제스처 제한 */
+.touch-none {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+input[type="range"] {
+  touch-action: pan-y;
+}
+
+/* 카페 로고 반응형 레이아웃 */
+.cafe-button {
+  min-width: calc(25% - 9px); /* 모바일: 4개가 한 줄에 */
+}
+
+@media (min-width: 640px) {
+  .cafe-button {
+    min-width: auto; /* 웹: 자동 크기 */
+    flex: 0 0 auto; /* flex-shrink 방지 */
+    padding: 16px !important; /* 웹에서는 더 넓은 패딩 */
+  }
 }

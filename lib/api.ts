@@ -78,12 +78,12 @@ export async function fetchCoffeeMenus({
     }
     // 데이터 쿼리
     const [rows] = await connection.query(
-      `SELECT name, eng_name, kcal, caffeine, sodium, sugars, protein, store FROM coffee_info ${where} ORDER BY ${orderBySql} ${orderDir} LIMIT ? OFFSET ?`,
+      `SELECT DISTINCT name, eng_name, kcal, caffeine, sodium, sugars, protein, store FROM coffee_info ${where} ORDER BY ${orderBySql} ${orderDir} LIMIT ? OFFSET ?`,
       [...params, pageSize, offset]
     )
     // 전체 개수 쿼리
     const [countRows] = await connection.query(
-      `SELECT COUNT(*) as total FROM coffee_info ${where}`,
+      `SELECT COUNT(DISTINCT name, eng_name, kcal, caffeine, sodium, sugars, protein, store) as total FROM coffee_info ${where}`,
       params
     )
     const total = (countRows as any[])[0]?.total || 0;
@@ -109,6 +109,23 @@ export async function fetchCoffeeMenus({
   }
 }
 
+// Function to fetch max values for filters
+export async function fetchMaxValues(): Promise<{ maxKcal: number, maxSugars: number }> {
+  const connection = await pool.getConnection()
+  try {
+    const [rows] = await connection.query(
+      "SELECT MAX(kcal) as maxKcal, MAX(sugars) as maxSugars FROM coffee_info"
+    )
+    const result = (rows as any[])[0]
+    return {
+      maxKcal: Number(result.maxKcal) || 800,
+      maxSugars: Number(result.maxSugars) || 50
+    }
+  } finally {
+    connection.release()
+  }
+}
+
 // Function to fetch detailed coffee information
 export async function fetchCoffeeDetails(id: string): Promise<Coffee> {
   try {
@@ -124,15 +141,15 @@ export async function fetchCoffeeDetails(id: string): Promise<Coffee> {
         // If it's a composite ID like "Starbucks-Americano"
         const [store, ...nameParts] = id.split("-")
         const eng_name = nameParts.join("-")
-        query = "SELECT * FROM coffee_info WHERE store = ? AND eng_name = ? LIMIT 1"
+        query = "SELECT DISTINCT * FROM coffee_info WHERE store = ? AND eng_name = ? LIMIT 1"
         params = [store, eng_name]
       } else if (!isNaN(Number(id))) {
         // If it's a numeric ID
-        query = "SELECT * FROM coffee_info WHERE id = ? LIMIT 1"
+        query = "SELECT DISTINCT * FROM coffee_info WHERE id = ? LIMIT 1"
         params = [id]
       } else {
         // If it's just the eng_name
-        query = "SELECT * FROM coffee_info WHERE eng_name = ? LIMIT 1"
+        query = "SELECT DISTINCT * FROM coffee_info WHERE eng_name = ? LIMIT 1"
         params = [id]
       }
 

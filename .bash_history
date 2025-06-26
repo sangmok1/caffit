@@ -527,3 +527,37 @@ pnpm build && pm2 restart next-app
 pnpm build && pm2 restart next-app
 pnpm build && pm2 restart next-app
 pnpm build && pm2 restart next-app
+pnpm build && pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pm2 restart next-app
+sudo certbot --nginx -d coffe.ai.kr -d www.coffe.ai.kr --redirect --agree-tos --no-eff-email -m admin@coffe.ai.kr
+sudo systemctl restart nginx
+curl -I https://coffe.ai.kr/robots.txt
+pnpm build && pm2 restart next-app
+pnpm build
+pm2 restart next-app
+pnpm build && pm2 restart next-app
+pkill -f "next"
+npm run build
+pkill -f "next"
+npm run build
+pkill -f "next"
+npm run build
+pnpm build
+pm2 restart next-app
+pnpm build && pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pm2 restart next-app
+pnpm add nodemailer @types/nodemailer
+pnpm build && pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pm2 restart next-app
+pm2 logs next-app --lines 20
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pm2 restart next-app
+cd /home/ec2-user && ls -la | grep env
+pm2 logs --lines 50
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pm2 logs next-app --lines 20
