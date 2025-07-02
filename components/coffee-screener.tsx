@@ -274,33 +274,35 @@ export default function CoffeeScreener() {
             <span className="text-xl md:text-base">🍬</span>
             <span className="text-xs md:text-base md:ml-1">Sugar</span>
             <ArrowUpDown className="inline h-4 w-4 align-text-bottom md:ml-1 mt-1 md:mt-0" />
-            <Tooltip content={
-              <div>
-                <b>기준 수치: 하루 권장 당류 섭취량</b><br/>
-                세계보건기구(WHO) 기준:<br/>
-                성인 하루 섭취 권장량: <b>25g 이하</b> (총 에너지 섭취량의 5%)<br/>
-                최대 상한선: <b>50g</b> (총 에너지 섭취량의 10%)<br/>
-                <br/>
-                <b>커피 1잔 기준 주의 구간 (Caffit 기준)</b>
-                <table style={{marginTop: 6, fontSize: 12, borderCollapse: 'collapse'}}>
-                  <thead>
-                    <tr style={{borderBottom: '1px solid #E0C9A6'}}>
-                      <th style={{padding: '2px 6px'}}>등급</th>
-                      <th style={{padding: '2px 6px'}}>수치(당류)</th>
-                      <th style={{padding: '2px 6px'}}>설명</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>🟢 양호</td><td>0~8g</td><td>거의 무당, 주로 블랙/아메리카노류</td></tr>
-                    <tr><td>🟡 보통</td><td>9~17g</td><td>설탕/시럽 조금 포함된 라떼류</td></tr>
-                    <tr><td>🟠 주의</td><td>18~24g</td><td>크림/시럽 많은 음료. 하루 섭취량의 70~100%</td></tr>
-                    <tr><td>🔴 위험</td><td>25g 이상</td><td>하루 권장량 초과. 설탕+휘핑 조합</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            }>
-              <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
-            </Tooltip>
+            {!isFixed && (
+              <Tooltip content={
+                <div>
+                  <b>기준 수치: 하루 권장 당류 섭취량</b><br/>
+                  세계보건기구(WHO) 기준:<br/>
+                  성인 하루 섭취 권장량: <b>25g 이하</b> (총 에너지 섭취량의 5%)<br/>
+                  최대 상한선: <b>50g</b> (총 에너지 섭취량의 10%)<br/>
+                  <br/>
+                  <b>커피 1잔 기준 주의 구간 (Caffit 기준)</b>
+                  <table style={{marginTop: 6, fontSize: 12, borderCollapse: 'collapse'}}>
+                    <thead>
+                      <tr style={{borderBottom: '1px solid #E0C9A6'}}>
+                        <th style={{padding: '2px 6px'}}>등급</th>
+                        <th style={{padding: '2px 6px'}}>수치(당류)</th>
+                        <th style={{padding: '2px 6px'}}>설명</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>🟢 양호</td><td>0~8g</td><td>거의 무당, 주로 블랙/아메리카노류</td></tr>
+                      <tr><td>🟡 보통</td><td>9~17g</td><td>설탕/시럽 조금 포함된 라떼류</td></tr>
+                      <tr><td>🟠 주의</td><td>18~24g</td><td>크림/시럽 많은 음료. 하루 섭취량의 70~100%</td></tr>
+                      <tr><td>🔴 위험</td><td>25g 이상</td><td>하루 권장량 초과. 설탕+휘핑 조합</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              }>
+                <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
+              </Tooltip>
+            )}
           </div>
         </th>
         <th className="py-2 text-center cursor-pointer w-[18.75%] md:w-auto text-base font-normal" 
@@ -310,32 +312,34 @@ export default function CoffeeScreener() {
             <span className="text-xl md:text-base">⚡</span>
             <span className="text-xs md:text-base md:ml-1">Caffeine</span>
             <ArrowUpDown className="inline h-4 w-4 align-text-bottom md:ml-1 mt-1 md:mt-0" />
-            <Tooltip content={
-              <div>
-                <b>카페인 신호등 (Caffeine Traffic Light)</b><br/>
-                FDA(미국 식약청): 성인 하루 권장량 최대 <b>400mg</b><br/>
-                커피 1잔(354ml 기준) 약 80~150mg<br/>
-                <br/>
-                <b>카페인 등급표</b>
-                <table style={{marginTop: 6, fontSize: 12, borderCollapse: 'collapse'}}>
-                  <thead>
-                    <tr style={{borderBottom: '1px solid #E0C9A6'}}>
-                      <th style={{padding: '2px 6px'}}>등급</th>
-                      <th style={{padding: '2px 6px'}}>수치(mg)</th>
-                      <th style={{padding: '2px 6px'}}>설명</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>🟢 저카페인</td><td>0~70mg</td><td>디카페인, 연한 커피류</td></tr>
-                    <tr><td>🟡 보통</td><td>71~140mg</td><td>일반 라떼, 콜드브루 소용량</td></tr>
-                    <tr><td>🟠 주의</td><td>141~200mg</td><td>콜드브루/더블샷 등 고카페인</td></tr>
-                    <tr><td>🔴 고위험</td><td>201mg 이상</td><td>에너지 음료 수준, 하루치 절반 이상</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            }>
-              <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
-            </Tooltip>
+            {!isFixed && (
+              <Tooltip content={
+                <div>
+                  <b>카페인 신호등 (Caffeine Traffic Light)</b><br/>
+                  FDA(미국 식약청): 성인 하루 권장량 최대 <b>400mg</b><br/>
+                  커피 1잔(354ml 기준) 약 80~150mg<br/>
+                  <br/>
+                  <b>카페인 등급표</b>
+                  <table style={{marginTop: 6, fontSize: 12, borderCollapse: 'collapse'}}>
+                    <thead>
+                      <tr style={{borderBottom: '1px solid #E0C9A6'}}>
+                        <th style={{padding: '2px 6px'}}>등급</th>
+                        <th style={{padding: '2px 6px'}}>수치(mg)</th>
+                        <th style={{padding: '2px 6px'}}>설명</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>🟢 저카페인</td><td>0~70mg</td><td>디카페인, 연한 커피류</td></tr>
+                      <tr><td>🟡 보통</td><td>71~140mg</td><td>일반 라떼, 콜드브루 소용량</td></tr>
+                      <tr><td>🟠 주의</td><td>141~200mg</td><td>콜드브루/더블샷 등 고카페인</td></tr>
+                      <tr><td>🔴 고위험</td><td>201mg 이상</td><td>에너지 음료 수준, 하루치 절반 이상</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              }>
+                <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
+              </Tooltip>
+            )}
           </div>
         </th>
         <th className="py-2 text-center cursor-pointer w-[18.75%] md:w-auto text-base font-normal" 
@@ -345,33 +349,35 @@ export default function CoffeeScreener() {
             <span className="text-xl md:text-base">🧂</span>
             <span className="text-xs md:text-base md:ml-1">Salt</span>
             <ArrowUpDown className="inline h-4 w-4 align-text-bottom md:ml-1 mt-1 md:mt-0" />
-            <Tooltip content={
-              <div>
-                <b>나트륨 신호등 (Sodium Traffic Light)</b><br/>
-                WHO 권장량: 하루 <b>2,000mg 이하</b><br/>
-                한국 식약처: 나트륨 섭취 줄이기 캠페인<br/>
-                커피에 나트륨이 들어가는 이유: 시럽, 우유, 크림, 베이스 등<br/>
-                <br/>
-                <b>나트륨 등급표</b>
-                <table style={{marginTop: 6, fontSize: 12, borderCollapse: 'collapse'}}>
-                  <thead>
-                    <tr style={{borderBottom: '1px solid #E0C9A6'}}>
-                      <th style={{padding: '2px 6px'}}>등급</th>
-                      <th style={{padding: '2px 6px'}}>수치(mg)</th>
-                      <th style={{padding: '2px 6px'}}>설명</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>🟢 저염</td><td>0~100mg</td><td>아메리카노, 블랙류</td></tr>
-                    <tr><td>🟡 보통</td><td>101~200mg</td><td>라떼류</td></tr>
-                    <tr><td>🟠 주의</td><td>201~300mg</td><td>프라푸치노류</td></tr>
-                    <tr><td>🔴 고위험</td><td>301mg 이상</td><td>가공 시럽, 휘핑 첨가 음료</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            }>
-              <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
-            </Tooltip>
+            {!isFixed && (
+              <Tooltip content={
+                <div>
+                  <b>나트륨 신호등 (Sodium Traffic Light)</b><br/>
+                  WHO 권장량: 하루 <b>2,000mg 이하</b><br/>
+                  한국 식약처: 나트륨 섭취 줄이기 캠페인<br/>
+                  커피에 나트륨이 들어가는 이유: 시럽, 우유, 크림, 베이스 등<br/>
+                  <br/>
+                  <b>나트륨 등급표</b>
+                  <table style={{marginTop: 6, fontSize: 12, borderCollapse: 'collapse'}}>
+                    <thead>
+                      <tr style={{borderBottom: '1px solid #E0C9A6'}}>
+                        <th style={{padding: '2px 6px'}}>등급</th>
+                        <th style={{padding: '2px 6px'}}>수치(mg)</th>
+                        <th style={{padding: '2px 6px'}}>설명</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>🟢 저염</td><td>0~100mg</td><td>아메리카노, 블랙류</td></tr>
+                      <tr><td>🟡 보통</td><td>101~200mg</td><td>라떼류</td></tr>
+                      <tr><td>🟠 주의</td><td>201~300mg</td><td>프라푸치노류</td></tr>
+                      <tr><td>🔴 고위험</td><td>301mg 이상</td><td>가공 시럽, 휘핑 첨가 음료</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              }>
+                <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
+              </Tooltip>
+            )}
           </div>
         </th>
         <th className="py-2 text-center cursor-pointer w-[18.75%] md:w-auto text-base font-normal" 
@@ -381,48 +387,52 @@ export default function CoffeeScreener() {
             <span className="text-xl md:text-base">🩺</span>
             <span className="text-xs md:text-base md:ml-1">Health</span>
             <ArrowUpDown className="inline h-4 w-4 align-text-bottom md:ml-1 mt-1 md:mt-0" />
-            <Tooltip content={
-              <div style={{fontSize:13}}>
-                <b>종합 건강 점수 산출법</b><br/>
-                각 성분을 100점 만점 환산 후 평균<br/>
-                <table style={{marginTop:6, fontSize:12, borderCollapse:'collapse'}}>
-                  <thead>
-                    <tr style={{borderBottom:'1px solid #E0C9A6'}}>
-                      <th style={{padding:'2px 6px'}}>성분</th>
-                      <th style={{padding:'2px 6px'}}>기준치</th>
-                      <th style={{padding:'2px 6px'}}>점수 계산</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>당류</td><td>25g</td><td>100 - (당류g/25)×100</td></tr>
-                    <tr><td>카페인</td><td>200mg</td><td>100 - (카페인mg/200)×100</td></tr>
-                    <tr><td>나트륨</td><td>300mg</td><td>100 - (나트륨mg/300)×100</td></tr>
-                  </tbody>
-                </table>
-                <div style={{marginTop:6}}>
-                  <b>등급</b><br/>
-                  81~100: 🟢 매우 건강<br/>
-                  61~80: 🟡 보통<br/>
-                  41~60: 🟠 주의<br/>
-                  0~40: 🔴 위험
+            {!isFixed && (
+              <Tooltip content={
+                <div style={{fontSize:13}}>
+                  <b>종합 건강 점수 산출법</b><br/>
+                  각 성분을 100점 만점 환산 후 평균<br/>
+                  <table style={{marginTop:6, fontSize:12, borderCollapse:'collapse'}}>
+                    <thead>
+                      <tr style={{borderBottom:'1px solid #E0C9A6'}}>
+                        <th style={{padding:'2px 6px'}}>성분</th>
+                        <th style={{padding:'2px 6px'}}>기준치</th>
+                        <th style={{padding:'2px 6px'}}>점수 계산</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>당류</td><td>25g</td><td>100 - (당류g/25)×100</td></tr>
+                      <tr><td>카페인</td><td>200mg</td><td>100 - (카페인mg/200)×100</td></tr>
+                      <tr><td>나트륨</td><td>300mg</td><td>100 - (나트륨mg/300)×100</td></tr>
+                    </tbody>
+                  </table>
+                  <div style={{marginTop:6}}>
+                    <b>등급</b><br/>
+                    81~100: 🟢 매우 건강<br/>
+                    61~80: 🟡 보통<br/>
+                    41~60: 🟠 주의<br/>
+                    0~40: 🔴 위험
+                  </div>
                 </div>
-              </div>
-            }>
-              <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
-            </Tooltip>
+              }>
+                <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
+              </Tooltip>
+            )}
           </div>
         </th>
         <th className="py-2 text-center hidden md:table-cell bg-[#F5E9D9]"
             style={isFixed && columnWidths[5] ? { width: `${columnWidths[5]}px`, minWidth: `${columnWidths[5]}px` } : {}}>🥚 Protein
-          <Tooltip content={
-            <div>
-              <b>단백질(Protein)</b><br/>
-              WHO 기준: 성인 하루 권장량<br/>
-              <b>체중 1kg당 0.8g</b> (예: 60kg → 48g/일)
-            </div>
-          }>
-            <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
-          </Tooltip>
+          {!isFixed && (
+            <Tooltip content={
+              <div>
+                <b>단백질(Protein)</b><br/>
+                WHO 기준: 성인 하루 권장량<br/>
+                <b>체중 1kg당 0.8g</b> (예: 60kg → 48g/일)
+              </div>
+            }>
+              <span className="hidden md:inline-block" style={{cursor:'pointer', marginLeft:4, color:'#C8A27A', fontWeight:600}}><Info className="inline w-4 h-4 align-text-bottom" /></span>
+            </Tooltip>
+          )}
         </th>
         <th className="py-2 text-center hidden md:table-cell bg-[#F5E9D9]"
             style={isFixed && columnWidths[6] ? { width: `${columnWidths[6]}px`, minWidth: `${columnWidths[6]}px` } : {}}>🏪 Store</th>
@@ -482,6 +492,15 @@ export default function CoffeeScreener() {
         .slider-thumb::-moz-range-track {
           height: 8px;
           border-radius: 4px;
+        }
+        
+        .fixed-header-scrollbar {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        
+        .fixed-header-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
       <div className="min-h-screen bg-white py-8 px-2 md:px-0">
@@ -739,10 +758,13 @@ export default function CoffeeScreener() {
         <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-4">
           {/* 고정 헤더 (스크롤 시에만 표시) */}
           {showFixedHeader && (
-            <div className="fixed top-0 left-0 right-0 z-50">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-transparent px-4">
               <div className="max-w-5xl mx-auto">
-                <div className="bg-white rounded-lg shadow p-4">
-                  <div className="overflow-x-auto bg-white rounded-lg">
+                <div className="bg-white shadow p-4" style={{borderRadius: '8px 8px 0 0'}}>
+                  <div 
+                    className="overflow-x-auto bg-white fixed-header-scrollbar md:border-0 border border-[#F0F0F0]" 
+                    style={{borderRadius: '8px 8px 0 0'}}
+                  >
                     <table className="w-full table-fixed text-sm">
                       <TableHeader isFixed={true} />
                     </table>
