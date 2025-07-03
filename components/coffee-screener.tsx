@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Coffee as CoffeeIcon, Search, Filter, ArrowUpDown, Info } from "lucide-react"
 import type { Coffee } from "@/types/coffee"
+import Link from "next/link"
 
 interface CafeItem {
   name: string;
@@ -65,7 +67,9 @@ function Tooltip({ content, children }: { content: React.ReactNode, children: Re
   )
 }
 
-export default function CoffeeScreener() {
+function CoffeeScreener() {
+  const searchParams = useSearchParams()
+  
   // 상태
   const [coffees, setCoffees] = useState<Coffee[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -86,8 +90,17 @@ export default function CoffeeScreener() {
   const [total, setTotal] = useState(0)
   const [showFixedHeader, setShowFixedHeader] = useState(false)
   const [columnWidths, setColumnWidths] = useState<number[]>([])
-  const [currentTab, setCurrentTab] = useState<'menu' | 'map'>('menu')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // URL 파라미터에서 초기 필터 설정
+  useEffect(() => {
+    if (searchParams) {
+      const storeParam = searchParams.get('store')
+      if (storeParam) {
+        setSelectedCafe(storeParam)
+      }
+    }
+  }, [searchParams])
 
   // 최대값 가져오기 (최초 로드시)
   useEffect(() => {
@@ -506,37 +519,18 @@ export default function CoffeeScreener() {
         }
       `}</style>
       <div className="min-h-screen bg-white py-8 px-2 md:px-0">
-        {/* 웹 상단 탭 네비게이션 */}
+        {/* 웹 상단 네비게이션 */}
         <div className="hidden md:block max-w-5xl mx-auto mb-4">
           <div className="flex justify-end gap-1">
-            <button
-              onClick={() => setCurrentTab('menu')}
-              className={`px-4 py-2 transition-colors font-medium relative ${
-                currentTab === 'menu' 
-                  ? 'bg-white text-[#5D4037] border-l border-r border-t border-[#E6D9CC] -mb-px z-10' 
-                  : 'text-[#8D6E63] hover:bg-[#F8F6F2] bg-[#F5F5F5] border border-[#E6D9CC] mt-1'
-              }`}
-              style={{
-                borderRadius: currentTab === 'menu' ? '8px 8px 0 0' : '8px 8px 0 0',
-                borderBottom: currentTab === 'menu' ? '1px solid white' : '1px solid #E6D9CC'
-              }}
-            >
+            <div className="px-4 py-2 bg-white text-[#5D4037] border-l border-r border-t border-[#E6D9CC] -mb-px z-10 rounded-t-lg font-medium">
               메뉴검색
-            </button>
-            <button
-              onClick={() => setCurrentTab('map')}
-              className={`px-4 py-2 transition-colors font-medium relative ${
-                currentTab === 'map' 
-                  ? 'bg-white text-[#5D4037] border-l border-r border-t border-[#E6D9CC] -mb-px z-10' 
-                  : 'text-[#8D6E63] hover:bg-[#F8F6F2] bg-[#F5F5F5] border border-[#E6D9CC] mt-1'
-              }`}
-              style={{
-                borderRadius: currentTab === 'map' ? '8px 8px 0 0' : '8px 8px 0 0',
-                borderBottom: currentTab === 'map' ? '1px solid white' : '1px solid #E6D9CC'
-              }}
+            </div>
+            <Link
+              href="/find_location"
+              className="px-4 py-2 text-[#8D6E63] hover:bg-[#F8F6F2] bg-[#F5F5F5] border border-[#E6D9CC] mt-1 rounded-t-lg font-medium transition-colors"
             >
               카페찾기
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -544,41 +538,31 @@ export default function CoffeeScreener() {
         {/* Navigation */}
         <div className="relative mb-8">
           {/* 모바일 햄버거 메뉴 */}
-          <div className="md:hidden absolute left-0 top-0 z-10">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-[#8D6E63] hover:text-[#C8A27A] transition-colors bg-white border border-[#E6D9CC] rounded-lg shadow-sm hover:shadow-md"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            {isMobileMenuOpen && (
-              <div className="absolute top-10 left-0 bg-white shadow-lg rounded-lg p-4 min-w-[150px] border">
-                <button
-                  onClick={() => {
-                    setCurrentTab('menu')
-                    setIsMobileMenuOpen(false)
-                  }}
-                  className={`block w-full text-left px-3 py-2 rounded transition-colors ${
-                    currentTab === 'menu' ? 'bg-[#C8A27A] text-white' : 'text-[#8D6E63] hover:bg-[#F8F6F2]'
-                  }`}
-                >
-                  메뉴검색
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentTab('map')
-                    setIsMobileMenuOpen(false)
-                  }}
-                  className={`block w-full text-left px-3 py-2 rounded transition-colors ${
-                    currentTab === 'map' ? 'bg-[#C8A27A] text-white' : 'text-[#8D6E63] hover:bg-[#F8F6F2]'
-                  }`}
-                >
-                  카페찾기
-                </button>
-              </div>
-            )}
+          <div className="md:hidden absolute left-0 -top-8 z-10">
+            <div className="relative">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-[#8D6E63] hover:text-[#C8A27A] transition-colors bg-white border border-[#E6D9CC] rounded-lg shadow-sm hover:shadow-md"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              {isMobileMenuOpen && (
+                <div className="absolute top-10 left-0 bg-white shadow-lg rounded-lg p-4 min-w-[150px] border">
+                  <div className="block w-full text-left px-3 py-2 rounded bg-[#C8A27A] text-white font-medium">
+                    메뉴검색
+                  </div>
+                  <Link
+                    href="/find_location"
+                    className="block w-full text-left px-3 py-2 rounded transition-colors text-[#8D6E63] hover:bg-[#F8F6F2] font-medium"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    카페찾기
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="text-center">
@@ -598,9 +582,6 @@ export default function CoffeeScreener() {
           </div>
         </div>
 
-        {/* 메뉴검색 탭 내용 */}
-        {currentTab === 'menu' && (
-          <>
             {/* 카페 필터 */}
             <div className="mb-6 max-w-4xl mx-auto">
           {/* 메인 카페들 - 웹에서는 한 줄, 모바일에서는 4개씩 */}
@@ -960,22 +941,30 @@ export default function CoffeeScreener() {
             </button>
           </div>
         </div>
-            </>
-        )}
-
-        {/* 카페찾기 탭 내용 */}
-        {currentTab === 'map' && (
-          <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-4">
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🗺️</div>
-              <h2 className="text-2xl font-bold text-[#5D4037] mb-4">카페찾기</h2>
-              <p className="text-[#8D6E63] mb-8">주변 카페를 지도에서 찾아보세요!</p>
-              <div className="text-sm text-[#B08E6A]">지도 기능이 곧 추가될 예정입니다.</div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
     </>
   )
 }
+
+// Suspense wrapper 컴포넌트
+function CoffeeScreenerWithSuspense() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F8F3E9] text-[#5D4037] flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex justify-center items-center space-x-2 mb-3">
+            <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+            <div className="w-2 h-2 bg-[#C8A27A] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+          </div>
+          <p className="text-[#8D6E63]">메뉴 데이터 로딩중...</p>
+        </div>
+      </div>
+    }>
+      <CoffeeScreener />
+    </Suspense>
+  )
+}
+
+export default CoffeeScreenerWithSuspense

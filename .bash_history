@@ -561,3 +561,166 @@ cd /home/ec2-user && ls -la | grep env
 pm2 logs --lines 50
 . "/home/ec2-user/.cursor-server/cli/servers/Stable-53b99ce608cba35127ae3a050c1738a959750860/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
 pm2 logs next-app --lines 20
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build
+pm2 list
+pm2 restart next-app
+pnpm build && pm2 restart next-app
+cd /home/ec2-user && pnpm build && pm2 restart next-app
+pnpm build && pm2 restart next-app
+git log --oneline -10
+git reset --hard 567969f
+pnpm build && pm2 restart next-app
+git reset --hard 07383bc
+git branch -a && git status
+pnpm build && pm2 restart next-app
+pnpm build && pm2 restart next-app && echo "Build completed at $(date)"
+pnpm build && pm2 restart next-app
+pnpm install react-kakao-maps-sdk
+pnpm build && pm2 restart next-app
+pm2 logs next-app --lines 20
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pm2 restart next-app
+cd /home/ec2-user && npm run build
+pnpm build
+pm2 restart all
+pnpm build
+pm2 restart all
+pnpm build
+pm2 restart all
+pnpm build
+pm2 restart all
+ls -la | grep env
+pnpm build
+pm2 restart all
+pnpm build
+pm2 restart all
+pnpm build
+pm2 restart all
+pnpm build
+pm2 restart all
+pnpm build
+pm2 restart all
+mysql -u$DB_USER -p$DB_PASSWORD -h$DB_HOST $DB_NAME -e "SHOW TABLES LIKE 'coffee%';"
+cd /home/ec2-user && curl http://localhost:3000/api/test-db
+ps aux | grep next
+curl "http://localhost:3000/api/test-db" -H "Content-Type: application/json"
+curl "http://localhost:3000/api/coffee-menus?page=1&pageSize=1" | head -200
+curl "http://localhost:3000/api/cafe-locations?all=true" | jq '.'
+curl "http://localhost:3000/api/cafe-locations?all=true" | head -100
+curl "http://localhost:3000/api/cafe-locations?all=true" | head -50
+curl "http://localhost:3000/api/test-cafe-db" | head -100
+curl "http://localhost:3000/api/coffee-menus?page=1&pageSize=2" 2>/dev/null | head -5
+pkill -f next-server
+sleep 3 && curl "http://localhost:3000/api/test-cafe-db"
+pkill -f next-server
+pnpm build
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pm2 restart all
+sleep 2 && curl "http://localhost:3000/api/test-cafe-db"
+pnpm build && pm2 restart all
+sleep 2 && curl "http://localhost:3000/api/test-cafe-db"
+pnpm build && pm2 restart all
+sleep 2 && curl "http://localhost:3000/api/cafe-locations?all=true" | head -200
+pm2 logs --lines 20
+cd /home/ec2-user && pnpm build
+pm2 restart next-app
+git status
+git add .
+git commit -m "Fix filter and table header" 
+git push origin
+git status
+git add .
+git commit -m "Add fixed header" 
+git push origin
+git status
+git add .
+git commit -m "Add file"
+git push origin
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pm2 status
+netstat -tlnp | grep :3000
+pm2 restart next-app
+pm2 logs next-app --lines 10
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm start &
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+curl -X POST https://www.coffe.ai.kr/api/coffee-locations -H "Content-Type: application/json" -d '{"lat":37.5665,"lng":126.9780,"radius":1000}' -v
+pm2 restart next-app
+curl -X POST https://www.coffe.ai.kr/api/coffee-locations -H "Content-Type: application/json" -d '{"lat":37.5665,"lng":126.9780,"radius":1000}' | head -20
+pnpm build
+pm2 restart next-app
+curl -X POST https://www.coffe.ai.kr/api/coffee-locations -H "Content-Type: application/json" -d '{"lat":37.5665,"lng":126.9780,"radius":1000}' | jq
+pnpm build
+pm2 restart next-app
+curl -X POST https://www.coffe.ai.kr/api/coffee-locations -H "Content-Type: application/json" -d '{"lat":37.5665,"lng":126.9780,"radius":1000}' | jq
+pnpm build && pm2 restart next-app
+curl -X POST https://www.coffe.ai.kr/api/coffee-locations -H "Content-Type: application/json" -d '{"lat":37.5665,"lng":126.9780,"radius":1000}' | head -10
+pm2 restart all
+pnpm build
+pm2 restart all
+grep KAKAO .env.local
+cd /home/ec2-user && node -e "
+const mysql = require('mysql2');
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'cafeuser',
+  password: 'cafepass123',
+  database: 'cafedb'
+});
+
+connection.execute('SELECT DISTINCT store, store_name, store_type FROM coffee_location LIMIT 10', (err, results) => {
+  if (err) {
+    console.error('Error:', err);
+    return;
+  }
+  console.log('브랜드 데이터 샘플:');
+  results.forEach(row => {
+    console.log('store:', row.store, 'store_name:', row.store_name, 'store_type:', row.store_type);
+  });
+  connection.end();
+});
+"
+curl -X POST http://localhost:3000/api/coffee-locations -H "Content-Type: application/json" -d '{"lat": 37.5665, "lng": 126.9780, "radius": 500}' | head -20
+pm2 restart caffe-app
+pm2 list
+pm2 restart next-app
+pnpm build
+pm2 restart next-app
+pnpm build
+pm2 restart next-app
+cd /home/ec2-user && echo $KAKAO_NAVI_KEY | head -c 20
+pkill -f "next\|node" && sleep 2
+ps aux | grep next
+curl http://localhost:3001
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pkill -f "next\|node" && sleep 2
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+pkill -f "next\|node\|pnpm" && sleep 3
+ps aux | grep "next\|pnpm" | head -5
+sudo pkill -9 -f "next\|pnpm\|node" && sleep 3
+pnpm build
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm dev
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm dev
+npm install react-kakao-maps-sdk
+clear
+pnpm build && pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm start
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pnpm start
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build && pnpm start
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+lsof -i :3000
+netstat -tlnp | grep :3000
+pm2 list
+ps aux | grep node
+sudo netstat -tlnp | grep :3000
+ls -la
+pm2 show next-app
+pnpm build
+pm2 start "pnpm start" --name next-app
+pm2 logs next-app --lines 10

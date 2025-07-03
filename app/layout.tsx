@@ -46,11 +46,12 @@ export default function RootLayout({
           `}
         </Script>
         
-        {/* Google AdSense */}
+
+
+        {/* 카카오맵 API */}
         <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7295119449200071"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
+          src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`}
+          strategy="beforeInteractive"
         />
 
         {children}

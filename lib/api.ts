@@ -1,5 +1,5 @@
 import mysql from "mysql2/promise"
-import type { Coffee } from "@/types/coffee"
+import type { Coffee, CafeLocation } from "@/types/coffee"
 
 // Database connection configuration
 const dbConfig = {
@@ -184,5 +184,85 @@ export async function fetchCoffeeDetails(id: string): Promise<Coffee> {
   } catch (error) {
     console.error("Database error:", error)
     throw new Error("Failed to fetch coffee details from database")
+  }
+}
+
+// Function to fetch cafe locations within radius
+export async function fetchCafeLocations({
+  latitude,
+  longitude,
+  radiusKm = 1,
+  store = ""
+}: {
+  latitude: number,
+  longitude: number,
+  radiusKm?: number,
+  store?: string
+}): Promise<CafeLocation[]> {
+  const connection = await pool.getConnection()
+  try {
+    // 위도 1km ≈ 0.009도, 경도 1km ≈ 0.011도 (한국 기준)
+    const latDelta = (radiusKm * 0.009)
+    const lngDelta = (radiusKm * 0.011)
+    
+    let query = `
+      SELECT * FROM coffee_location 
+      WHERE lat BETWEEN ? AND ? 
+      AND lon BETWEEN ? AND ?
+    `
+    const params: any[] = [
+      latitude - latDelta,
+      latitude + latDelta,
+      longitude - lngDelta,
+      longitude + lngDelta
+    ]
+
+    if (store) {
+      query += " AND store = ?"
+      params.push(store)
+    }
+
+    query += " ORDER BY ((lat - ?) * (lat - ?) + (lon - ?) * (lon - ?)) ASC"
+    params.push(latitude, latitude, longitude, longitude)
+
+    const [rows] = await connection.query(query, params)
+    
+    return (rows as any[]).map((row, index) => ({
+      id: index + 1, // id 컬럼이 없으므로 인덱스 사용
+      name: row.store_name || "",
+      brand: row.store || "",
+      address: row.address || "",
+      phone: "", // phone 컬럼이 없음
+      latitude: Number(row.lat),
+      longitude: Number(row.lon),
+      opening_hours: "", // opening_hours 컬럼이 없음
+      created_at: "",
+      updated_at: "",
+    }))
+  } finally {
+    connection.release()
+  }
+}
+
+// Function to fetch all cafe locations (for testing)
+export async function fetchAllCafeLocations(): Promise<CafeLocation[]> {
+  const connection = await pool.getConnection()
+  try {
+    const [rows] = await connection.query("SELECT * FROM coffee_location ORDER BY store, store_name")
+    
+    return (rows as any[]).map((row, index) => ({
+      id: index + 1, // id 컬럼이 없으므로 인덱스 사용
+      name: row.store_name || "",
+      brand: row.store || "",
+      address: row.address || "",
+      phone: "", // phone 컬럼이 없음
+      latitude: Number(row.lat),
+      longitude: Number(row.lon),
+      opening_hours: "", // opening_hours 컬럼이 없음
+      created_at: "",
+      updated_at: "",
+    }))
+  } finally {
+    connection.release()
   }
 }
