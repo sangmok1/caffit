@@ -724,3 +724,23 @@ pm2 show next-app
 pnpm build
 pm2 start "pnpm start" --name next-app
 pm2 logs next-app --lines 10
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pm2 restart next-app
+pm2 stop next-app
+pnpm build
+pm2 start next-app
+pm2 stop next-app
+pnpm build
+pm2 start next-app
+cd /home/ec2-user && pnpm build
+pm2 restart next-app
+pm2 status
+pnpm build
+pm2 restart next-app
+. "/home/ec2-user/.cursor-server/cli/servers/Stable-5b19bac7a947f54e4caa3eb7e4c5fbf832389850/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+pnpm build
+pm2 start pnpm --name "caffit-app" -- start
+pm2 stop all
+pm2 delete all
+pm2 start pnpm --name "next-app" -- start
+pm2 logs next-app --lines 20

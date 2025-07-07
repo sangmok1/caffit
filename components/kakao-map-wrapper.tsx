@@ -40,7 +40,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
   const [directions, setDirections] = useState<any>(null)
   const [routeOverlay, setRouteOverlay] = useState<any>(null)
   const [isNavigating, setIsNavigating] = useState(false)
-  const [navigationMode, setNavigationMode] = useState<'walking' | 'driving'>('walking')
+  // navigationMode 제거 - 도보 전용
   const [isFullscreenNav, setIsFullscreenNav] = useState(false)
   const [currentRoute, setCurrentRoute] = useState<any>(null)
   const [currentStep, setCurrentStep] = useState(0)
@@ -83,6 +83,11 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
       return
     }
 
+    // 이미 위치 요청 중이면 중복 요청 방지
+    if (locationRequested) {
+      return
+    }
+
     setLocationRequested(true)
     setError("📍 위치 권한을 요청하고 있습니다...")
     
@@ -93,21 +98,24 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
         setError("") // 에러 메시지 제거
       },
       (error) => {
-        console.error("위치 정보를 가져올 수 없습니다:", error)
         let errorMessage = ""
         
         switch(error.code) {
           case error.PERMISSION_DENIED:
             errorMessage = "위치 접근이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요."
+            console.error("위치 권한 거부:", error)
             break
           case error.POSITION_UNAVAILABLE:
             errorMessage = "위치 정보를 사용할 수 없습니다."
+            console.error("위치 정보 사용 불가:", error)
             break
           case error.TIMEOUT:
             errorMessage = "위치 정보 요청 시간이 초과되었습니다."
+            // 타임아웃은 일반적인 현상이므로 로그를 줄임
             break
           default:
             errorMessage = "알 수 없는 오류가 발생했습니다."
+            console.error("위치 정보 알 수 없는 오류:", error)
             break
         }
         
@@ -116,9 +124,9 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
         setError(errorMessage + " 서울역으로 설정했습니다.")
       },
       {
-        enableHighAccuracy: true, // 높은 정확도 요청
-        timeout: 10000, // 10초 타임아웃
-        maximumAge: 300000 // 5분 동안 캐시된 위치 사용
+        enableHighAccuracy: false, // 배터리 절약을 위해 정확도 낮춤
+        timeout: 15000, // 15초 타임아웃으로 연장
+        maximumAge: 60000 // 1분 동안 캐시된 위치 사용
       }
     )
   }
@@ -171,56 +179,67 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     fetchNearbyCafes()
   }, [userLocation])
 
-  // 컴포넌트 언마운트시 위치 추적 정리
+  // 컴포넌트 언마운트시 모든 리소스 정리
   useEffect(() => {
     return () => {
+      // 위치 추적 중지
       stopLocationTracking()
+      
+      // 타이머 정리
+      if (autoEndTimer) {
+        clearTimeout(autoEndTimer)
+      }
+      
+      // 경로 정리
+      if (routeOverlay && map) {
+        routeOverlay.setMap(null)
+      }
     }
   }, [])
 
   // 카페 브랜드별 로고 텍스트 (이모지 형태)
   const getCafeLogoText = (storeName: string) => {
-    console.log('브랜드 로고 텍스트 요청:', storeName) // 디버깅용
-    switch (storeName) {
-      case "Starbucks": return "★" // 스타벅스 별 모양
-      case "MEGA": return "M" // 메가커피 M
-      case "Gong Cha": return "G" // 공차 G
-      case "Compose": return "C" // 컴포즈 C
-      case "Paiks": return "P" // 빽다방 P
-      case "Hollys": return "H" // 할리스 H
-      case "EDIYA": return "E" // 이디야 E
-      default: return "☕"
-    }
+    const name = storeName.toLowerCase()
+    
+    if (name.includes('starbucks') || storeName === "Starbucks") return "★" // 스타벅스 별 모양
+    if (name.includes('gongcha') || storeName === "Gong Cha" || storeName === "gongcha") return "G" // 공차 G
+    if (name.includes('mega') || storeName === "MEGA") return "M" // 메가커피 M
+    if (name.includes('compose') || storeName === "Compose") return "C" // 컴포즈 C
+    if (name.includes('paiks') || storeName === "Paiks") return "P" // 빽다방 P
+    if (name.includes('hollys') || storeName === "Hollys") return "H" // 할리스 H
+    if (name.includes('ediya') || storeName === "EDIYA") return "E" // 이디야 E
+    
+    return "☕" // 기본 커피 이모지
   }
 
   // 카페 브랜드별 로고 이미지 URL
   const getCafeLogoUrl = (storeName: string) => {
-    const logoMap: { [key: string]: string } = {
-      "Starbucks": "/starbucks-logo.png",
-      "MEGA": "/mega-logo.png", 
-      "Gong Cha": "/gongcha-logo.png",
-      "Compose": "/compose-logo.png",
-      "Paiks": "/paiks-logo.png",
-      "Hollys": "/hollys-logo.png",
-      "EDIYA": "/ediya-logo.png"
-    }
+    const name = storeName.toLowerCase()
     
-    return logoMap[storeName] || "/default-cafe-logo.png"
+    if (name.includes('starbucks') || storeName === "Starbucks") return "/starbucks-logo.png"
+    if (name.includes('gongcha') || storeName === "Gong Cha" || storeName === "gongcha") return "/gongcha-logo.png"
+    if (name.includes('mega') || storeName === "MEGA") return "/mega-logo.png"
+    if (name.includes('compose') || storeName === "Compose") return "/compose-logo.png"
+    if (name.includes('paiks') || storeName === "Paiks") return "/paiks-logo.png"
+    if (name.includes('hollys') || storeName === "Hollys") return "/hollys-logo.png"
+    if (name.includes('ediya') || storeName === "EDIYA") return "/ediya-logo.png"
+    
+    return "/default-cafe-logo.png"
   }
 
   // 카페 브랜드별 마커 색상 (로고가 없을 때 대체용)
   const getMarkerColor = (storeName: string) => {
-    console.log('브랜드 색상 요청:', storeName) // 디버깅용
-    switch (storeName) {
-      case "Starbucks": return "#00704A" // 스타벅스 진한 녹색
-      case "MEGA": return "#4A90E2"
-      case "Gong Cha": return "#8B0000"
-      case "Compose": return "#8B4513"
-      case "Paiks": return "#191970"
-      case "Hollys": return "#FF4444"
-      case "EDIYA": return "#C8A27A"
-      default: return "#666666" // 기본 회색
-    }
+    const name = storeName.toLowerCase()
+    
+    if (name.includes('starbucks') || storeName === "Starbucks") return "#00A651" // 스타벅스 초록색
+    if (name.includes('gongcha') || storeName === "Gong Cha" || storeName === "gongcha") return "#B22222" // 공차 진한 빨강
+    if (name.includes('mega') || storeName === "MEGA") return "#4A90E2" // 메가커피 파랑
+    if (name.includes('compose') || storeName === "Compose") return "#8B4513" // 컴포즈 브라운
+    if (name.includes('paiks') || storeName === "Paiks") return "#191970" // 빽다방 네이비
+    if (name.includes('hollys') || storeName === "Hollys") return "#FF4444" // 할리스 빨강
+    if (name.includes('ediya') || storeName === "EDIYA") return "#C8A27A" // 이디야 브라운
+    
+    return "#666666" // 기본 회색
   }
 
   // 내 위치로 돌아가기
@@ -246,11 +265,9 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     if (selectedCafeId === cafe.id) {
       setSelectedCafeId(null)
       onCafeSelect?.(null)
-      console.log('카페 선택 해제됨:', cafe.store_name, cafe.branch_name)
     } else {
       setSelectedCafeId(cafe.id)
       onCafeSelect?.(cafe)
-      console.log('카페 선택됨:', cafe.store_name, cafe.branch_name)
     }
   }
 
@@ -260,11 +277,6 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
       routeOverlay.setMap(null)
       setRouteOverlay(null)
     }
-    setIsNavigating(false)
-    setCurrentRoute(null)
-    setCurrentStep(0)
-    setRemainingDistance(0)
-    setRemainingTime(0)
   }
 
   // 위치 추적 및 네비게이션 처리
@@ -272,9 +284,9 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     if (isTrackingLocation) return
 
     const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 1000
+      enableHighAccuracy: false, // 배터리 절약을 위해 정확도 낮춤
+      timeout: 15000, // 15초 타임아웃으로 연장
+      maximumAge: 60000 // 1분 동안 캐시된 위치 사용
     }
 
     const successCallback = (position: GeolocationPosition) => {
@@ -297,7 +309,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
       // 네비게이션 모드에서는 지도를 확대하고 중심을 고정
       if (isNavigating && map) {
         // 모드별 확대 레벨 설정
-        const navigationLevel = navigationMode === 'driving' ? 2 : 3 // 차량: 2, 도보: 3
+        const navigationLevel = 2 // 도보 전용
         map.setLevel(navigationLevel)
         map.setCenter(new window.kakao.maps.LatLng(latitude, longitude))
         
@@ -308,9 +320,13 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
         map.setCenter(new window.kakao.maps.LatLng(latitude, longitude))
       }
 
-      // 도착 확인 (차량: 30미터, 도보: 15미터 이내)
-      // 그리고 네비게이션이 최소 30초 이상 실행되었을 때만 도착 판단
-      if (selectedCafeId && cafes.length > 0 && isNavigating) {
+      // 네비게이션 중일 때만 추가 처리 수행
+      if (!isNavigating) {
+        return // 네비게이션이 종료되었으면 더 이상 처리하지 않음
+      }
+
+      // 도착 확인 (도보: 10미터 이내)
+      if (selectedCafeId && cafes.length > 0) {
         const targetCafe = cafes.find(cafe => cafe.id === selectedCafeId)
         if (targetCafe) {
           const distanceToTarget = getDistance(
@@ -318,21 +334,23 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
             targetCafe.latitude, targetCafe.longitude
           )
           
-          const arrivalThreshold = navigationMode === 'driving' ? 30 : 15
+          const arrivalThreshold = 10 // 도보 전용
           
-          // 네비게이션 시작 후 최소 30초 경과했는지 확인
+          // 네비게이션 시작 후 최소 10초 경과했는지 확인 (GPS 안정화 대기)
           const currentTime = Date.now()
           const elapsedTime = navigationStartTime ? currentTime - navigationStartTime : 0
-          const hasEnoughTimeElapsed = elapsedTime > 30000 // 30초
-          
-          console.log(`거리 체크: ${distanceToTarget}m (임계값: ${arrivalThreshold}m), 경과시간: ${Math.round(elapsedTime/1000)}초`)
+          const hasEnoughTimeElapsed = elapsedTime > 10000 // 10초로 단축
           
           if (distanceToTarget <= arrivalThreshold && hasEnoughTimeElapsed) {
-            console.log(`목적지 도착 감지: ${distanceToTarget}m`)
             handleDestinationReached()
             return
           }
         }
+      }
+
+      // 현재 안내 단계 업데이트 (GPS 위치 기반)
+      if (currentRoute && currentRoute.sections) {
+        updateCurrentStep(newLocation)
       }
 
       // 경로 이탈 체크 (5초마다, 비용 절약)
@@ -349,6 +367,18 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     }
 
     const errorCallback = (error: GeolocationPositionError) => {
+      // 네비게이션이 종료된 상태라면 에러 처리하지 않음
+      if (!isNavigating) {
+        return
+      }
+      
+      // 타임아웃 에러는 로그 스팸을 방지하기 위해 간소화
+      if (error.code === 3) { // TIMEOUT
+        // 타임아웃 에러는 너무 자주 발생할 수 있으므로 UI 에러는 표시하지 않음
+        return
+      }
+      
+      // 다른 심각한 에러만 로그 및 UI에 표시
       console.error("위치 추적 오류:", error)
       setError("위치 추적 중 오류가 발생했습니다: " + error.message)
     }
@@ -366,10 +396,17 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
   // 실시간 위치 추적 중지
   const stopLocationTracking = () => {
     if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId)
-      setWatchId(null)
+      try {
+        navigator.geolocation.clearWatch(watchId)
+      } catch (error) {
+        // clearWatch 에러는 무시 (이미 정리된 경우)
+      } finally {
+        setWatchId(null)
+        setIsTrackingLocation(false)
+      }
+    } else {
+      // watchId가 null이어도 상태는 정리
       setIsTrackingLocation(false)
-      console.log('실시간 위치 추적 중지됨')
     }
   }
 
@@ -385,13 +422,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     const durationInMinutes = Math.round(route.summary.duration / 60)
     setRemainingTime(durationInMinutes)
     
-    // API 응답 정보 로그 (디버깅용)
-    console.log('카카오 길찾기 응답:', {
-      distance: route.summary.distance + 'm',
-      duration: route.summary.duration + '초',
-      durationInMinutes: durationInMinutes + '분',
-      mode: navigationMode
-    })
+    // 도보 길찾기 완료
     
     setIsDestinationReached(false)
     
@@ -404,28 +435,21 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     // 실시간 위치 추적 시작
     startLocationTracking()
     
-    // 차량 모드에서 전체화면 네비게이션 시작시 경로도 함께 전달
-    if (navigationMode === 'driving' && isFullscreenNav) {
-      // 전체화면 모드에서는 현재 위치 중심으로 지도 설정
-      if (map && userLocation) {
-        const moveLatLon = new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
-        map.setCenter(moveLatLon)
-        map.setLevel(1) // 상세한 줌 레벨
-      }
-    }
+    // 도보 전용 - 차량 관련 코드 제거
     
-    // 음성 안내 시작
-    const modeText = navigationMode === 'driving' ? '차량' : '도보'
-    speakInstruction(`${modeText} 네비게이션을 시작합니다`)
+    // 도보 네비게이션 준비 완료
   }
 
   // 네비게이션 중지
   const stopNavigation = () => {
+    // 모든 네비게이션 상태 완전 초기화
     setIsNavigating(false)
     setIsFullscreenNav(false)
-    setNavigationStartTime(null) // 시작 시간 리셋
+    setNavigationStartTime(null)
     setCurrentRoute(null)
     setCurrentStep(0)
+    setRemainingDistance(0)
+    setRemainingTime(0)
     setIsDestinationReached(false)
     
     // 타이머 정리
@@ -434,10 +458,20 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
       setAutoEndTimer(null)
     }
     
-    // 실시간 위치 추적 중지
+    // 실시간 위치 추적 완전 중지
     stopLocationTracking()
     
+    // 경로 및 선택 상태 정리
     clearRoute()
+    setSelectedCafeId(null)
+    onCafeSelect?.(null)
+    
+    // 지도 레벨을 일반 상태로 복원
+    if (map && userLocation) {
+      map.setLevel(3)
+      map.setCenter(new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng))
+    }
+    
     speakInstruction("안내를 종료합니다")
   }
 
@@ -446,69 +480,221 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     setIsDestinationReached(true)
     speakInstruction("목적지에 도착했습니다")
     
-    // 자동 종료만 하고 홈으로 이동하지 않음
+    // GPS 거리 기반 도착 판단 후 5초 뒤 자동 종료
     const timer = setTimeout(() => {
       speakInstruction("안내를 종료합니다")
       stopNavigation()
-      // 홈으로 자동 이동 제거 - 사용자가 직접 선택하도록 함
-    }, 10000)
+    }, 5000) // 5초로 단축
     
     setAutoEndTimer(timer)
   }
 
-  // 음성 안내 함수 (차량 모드에서만 작동)
+  // 음성 안내 함수 (도보 모드에서는 비활성화)
   const speakInstruction = (text: string) => {
-    // 도보 모드에서는 음성 안내 제거
-    if (navigationMode === 'walking') {
-      console.log('도보 모드: 음성 안내 비활성화')
-      return
-    }
-    
-    // 차량 모드에서만 음성 안내
-    if (navigationMode === 'driving' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel() // 이전 음성 중단
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'ko-KR'
-      utterance.rate = 0.9
-      utterance.pitch = 1.0
-      window.speechSynthesis.speak(utterance)
-    }
+    // 도보 모드에서는 음성 안내 비활성화
   }
 
   // 턴바이턴 안내 텍스트 생성
   const getInstructionText = (route: any, stepIndex: number) => {
     if (!route || !route.sections || stepIndex >= route.sections.length) {
-      // 목적지 도착 처리
-      if (isNavigating && !isDestinationReached) {
-        handleDestinationReached()
+      return "목적지 근처입니다"
+    }
+    
+    // 전체 경로에서 현재 위치까지의 guides 수집
+    const allGuides: any[] = []
+    route.sections.forEach((section: any, sectionIndex: number) => {
+      if (section.guides && section.guides.length > 0) {
+        section.guides.forEach((guide: any, guideIndex: number) => {
+          allGuides.push({
+            ...guide,
+            sectionIndex,
+            guideIndex,
+            absoluteIndex: allGuides.length
+          })
+        })
       }
-      return "목적지에 도착했습니다"
+    })
+    
+    // 현재 단계에 해당하는 guide 찾기
+    const currentGuide = allGuides[stepIndex]
+    
+    if (currentGuide) {
+      // 카카오 API에서 제공하는 안내 텍스트 사용
+      if (currentGuide.guidance_text) {
+        const guideText = currentGuide.guidance_text
+        const guideDistance = Math.round(currentGuide.distance || 0)
+        
+        // 카카오 도보네비 스타일 안내
+        if (guideDistance > 100) {
+          return `${guideDistance}m 앞에서 ${guideText}`
+        } else if (guideDistance > 30) {
+          return `${guideDistance}m 앞 ${guideText}`
+        } else if (guideDistance > 10) {
+          return `${guideDistance}m 앞 ${guideText}`
+        } else if (guideDistance > 0) {
+          return `${guideDistance}m ${guideText}`
+        } else {
+          return guideText
+        }
+      }
+      
+      // guidance_type 기반 안내 (백업용)
+      const guidanceType = currentGuide.guidance_type
+      const guideDistance = Math.round(currentGuide.distance || 0)
+      
+      let directionText = ""
+      let emoji = ""
+      
+      switch(guidanceType) {
+        case 1: 
+          directionText = "직진"
+          emoji = "⬆️"
+          break
+        case 2: 
+          directionText = "좌회전"
+          emoji = "↪️"
+          break
+        case 3: 
+          directionText = "우회전"
+          emoji = "↩️"
+          break
+        case 4: 
+          directionText = "유턴"
+          emoji = "🔄"
+          break
+        case 5: 
+          directionText = "좌측 방향"
+          emoji = "↖️"
+          break
+        case 6: 
+          directionText = "우측 방향"
+          emoji = "↗️"
+          break
+        case 7: 
+          directionText = "목적지 도착"
+          emoji = "🎯"
+          break
+        default: 
+          directionText = "직진"
+          emoji = "⬆️"
+      }
+      
+      // 카카오 도보네비 스타일 안내
+      if (guideDistance > 100) {
+        return `${guideDistance}m 앞에서 ${directionText}하세요`
+      } else if (guideDistance > 30) {
+        return `${guideDistance}m 앞 ${directionText}`
+      } else if (guideDistance > 10) {
+        return `${guideDistance}m 앞 ${directionText}`
+      } else if (guideDistance > 0) {
+        return `${guideDistance}m ${directionText}`
+      } else {
+        return `${directionText}하세요`
+      }
     }
     
+    // guides 정보가 없는 경우 섹션 기준 기본 안내
     const section = route.sections[stepIndex]
-    const distance = Math.round(section.distance)
+    const distance = Math.round(section?.distance || 0)
     
-    // 목적지까지 20m 이하면 도착으로 간주
-    if (distance <= 20 && !isDestinationReached) {
-      handleDestinationReached()
+    if (stepIndex === route.sections.length - 1) {
       return "목적지에 도착했습니다"
-    }
-    
-    // 거리에 따른 안내 방식 결정
-    if (distance > 500) {
+    } else if (distance > 500) {
       return `직진 ${distance}m 계속 이동하세요`
     } else if (distance > 100) {
       return `${distance}m 앞에서 목적지 방향으로 이동하세요`
     } else if (distance > 50) {
       return `${distance}m 앞 목적지가 보입니다`
-    } else if (distance > 20) {
+    } else if (distance > 0) {
       return `${distance}m 앞에 목적지가 있습니다`
     } else {
       return "목적지에 거의 도착했습니다"
     }
   }
 
-  // 다음 안내 텍스트 생성 (더 현실적인 방향 안내)
+  // 전체 경로 카드 생성 함수
+  const getAllRouteInstructions = (route: any) => {
+    if (!route || !route.sections) return []
+    
+    const instructions: any[] = []
+    let totalDistance = 0
+    
+    route.sections.forEach((section: any, sectionIndex: number) => {
+      if (section.guides && section.guides.length > 0) {
+        section.guides.forEach((guide: any, guideIndex: number) => {
+          
+          const distance = Math.round(guide.distance || section.distance || 0)
+          totalDistance += distance
+          
+          let directionText = ""
+          let emoji = ""
+          
+          if (guide.guidance_text) {
+            directionText = guide.guidance_text
+            
+            // 텍스트에서 이모지 추출
+            if (directionText.includes("직진") || directionText.includes("계속")) {
+              emoji = "⬆️"
+            } else if (directionText.includes("좌회전") || directionText.includes("왼쪽")) {
+              emoji = "↪️"
+            } else if (directionText.includes("우회전") || directionText.includes("오른쪽")) {
+              emoji = "↩️"
+            } else if (directionText.includes("유턴")) {
+              emoji = "🔄"
+            } else if (directionText.includes("목적지") || directionText.includes("도착")) {
+              emoji = "🎯"
+            } else {
+              emoji = "🧭"
+            }
+          } else {
+            // guidance_type 기반 안내
+            const guidanceType = guide.guidance_type
+            
+            switch(guidanceType) {
+              case 1: directionText = "직진"; emoji = "⬆️"; break
+              case 2: directionText = "좌회전"; emoji = "↪️"; break
+              case 3: directionText = "우회전"; emoji = "↩️"; break
+              case 4: directionText = "유턴"; emoji = "🔄"; break
+              case 5: directionText = "좌측 방향"; emoji = "↖️"; break
+              case 6: directionText = "우측 방향"; emoji = "↗️"; break
+              case 7: directionText = "목적지 도착"; emoji = "🎯"; break
+              default: directionText = "직진"; emoji = "⬆️"
+            }
+          }
+          
+          const instruction = {
+            id: `${sectionIndex}-${guideIndex}`,
+            step: instructions.length + 1,
+            distance: distance,
+            text: directionText,
+            emoji: emoji,
+            isLast: sectionIndex === route.sections.length - 1 && guideIndex === section.guides.length - 1
+          }
+          
+          instructions.push(instruction)
+        })
+      } else {
+        // guides가 없는 경우 기본 안내
+        const distance = Math.round(section.distance || 0)
+        totalDistance += distance
+        
+        const instruction = {
+          id: `${sectionIndex}-0`,
+          step: instructions.length + 1,
+          distance: distance,
+          text: sectionIndex === route.sections.length - 1 ? "목적지 도착" : "직진",
+          emoji: sectionIndex === route.sections.length - 1 ? "🎯" : "⬆️",
+          isLast: sectionIndex === route.sections.length - 1
+        }
+        
+        instructions.push(instruction)
+      }
+    })
+    
+    return instructions
+  }
+
+  // 다음 안내 텍스트 생성 (카카오 API 기반 실제 안내)
   const getNextInstructionText = (route: any, stepIndex: number) => {
     if (!route || !route.sections || stepIndex + 1 >= route.sections.length) {
       return "목적지 도착 예정"
@@ -517,69 +703,85 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     const nextSection = route.sections[stepIndex + 1]
     const distance = Math.round(nextSection.distance)
     
-    // 다양한 방향 안내 패턴
-    const directions = ['좌회전', '우회전', '직진', '유턴', '좌측 방향', '우측 방향']
-    const randomDirection = directions[stepIndex % directions.length]
+    // 다음 section의 guides 정보 활용
+    if (nextSection.guides && nextSection.guides.length > 0) {
+      const nextGuide = nextSection.guides[0]
+      
+      if (nextGuide.guidance_text) {
+        // 카카오 API에서 제공하는 안내 텍스트 사용
+        const guideText = nextGuide.guidance_text
+        const guideDistance = Math.round(nextGuide.distance || distance)
+        
+        if (guideDistance > 1000) {
+          return `${Math.round(guideDistance/1000)}km 후 ${guideText}`
+        } else if (guideDistance > 100) {
+          return `${guideDistance}m 후 ${guideText}`
+        } else {
+          return `곧 ${guideText}`
+        }
+      }
+      
+      // guidance_type 기반 안내 (백업용)
+      const guidanceType = nextGuide.guidance_type
+      const guideDistance = Math.round(nextGuide.distance || distance)
+      
+      let directionText = ""
+      switch(guidanceType) {
+        case 1: directionText = "직진"; break
+        case 2: directionText = "좌회전"; break
+        case 3: directionText = "우회전"; break
+        case 4: directionText = "유턴"; break
+        case 5: directionText = "좌측 방향"; break
+        case 6: directionText = "우측 방향"; break
+        case 7: directionText = "목적지 도착"; break
+        default: directionText = "직진"
+      }
+      
+      if (guideDistance > 1000) {
+        return `${Math.round(guideDistance/1000)}km 후 ${directionText}`
+      } else if (guideDistance > 100) {
+        return `${guideDistance}m 후 ${directionText}`
+      } else {
+        return `곧 ${directionText}`
+      }
+    }
     
+    // guides 정보가 없는 경우 기본 안내
     if (distance > 1000) {
-      return `${Math.round(distance/1000)}km 후 ${randomDirection}`
+      return `${Math.round(distance/1000)}km 후 다음 안내`
     } else if (distance > 100) {
-      return `${distance}m 후 ${randomDirection}`
+      return `${distance}m 후 다음 안내`
     } else {
-      return `곧 ${randomDirection}`
+      return "곧 다음 안내"
     }
   }
 
   // 도보 네비게이션 시작
   const startWalkingNavigation = (cafe: CafeLocation) => {
-    console.log('🚶‍♀️ 도보 네비게이션 시작:', cafe)
-    
-    // 기존 네비게이션이 실행 중이면 먼저 정리
+    // 중복 호출 방지 - 이미 네비게이션 중이면 함수 종료
     if (isNavigating) {
-      console.log('기존 네비게이션 정리 중...')
-      stopNavigation()
+      return
     }
     
-    setNavigationMode('walking')
+    // 도보 전용 설정
     setTargetCafe(cafe)
     setSelectedCafeId(cafe.id)
     setIsNavigating(true)
+    setIsFullscreenNav(true) // 도보 모드 전체화면 네비게이션 활성화
     onCafeSelect?.(cafe)
     
-    // 도보 네비게이션 모드에서도 지도 확대
+    // 도보 네비게이션 모드에서 지도 확대
     if (map) {
-      map.setLevel(3) // 도보용 확대 레벨
+      map.setLevel(2) // 도보용 확대 레벨
     }
     
     showDirectionsOnMap(cafe, 'walking')
   }
 
-  // 차량 네비게이션 시작
-  const startDrivingNavigation = (cafe: CafeLocation) => {
-    console.log('🚗 차량 네비게이션 시작:', cafe)
-    
-    // 기존 네비게이션이 실행 중이면 먼저 정리
-    if (isNavigating) {
-      console.log('기존 네비게이션 정리 중...')
-      stopNavigation()
-    }
-    
-    setNavigationMode('driving')
-    setTargetCafe(cafe)
-    setSelectedCafeId(cafe.id)
-    setIsNavigating(true)
-    setIsFullscreenNav(true) // 차량 모드에서는 전체화면 네비게이션 활성화
-    onCafeSelect?.(cafe)
-    
-    // 자동차 네비게이션 모드에서는 지도를 더 확대
-    if (map) {
-      map.setLevel(2) // 더 확대된 레벨
-    }
-    
-    showDirectionsOnMap(cafe, 'driving')
-  }
+  // 차량 네비게이션 시작 (제거됨)
 
-  // 지도 위에 실제 네비게이션 경로 표시
+
+  // 지도 위에 실제 네비게이션 경로 표시 (도보 전용)
   const showDirectionsOnMap = async (cafe: CafeLocation, mode: 'walking' | 'driving' = 'walking') => {
     if (!userLocation || !map) return
 
@@ -604,7 +806,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
           car_fuel: 'GASOLINE',
           car_hipass: false,
           alternatives: false,
-          road_details: false
+          road_details: true
         })
       })
 
@@ -619,19 +821,36 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
         setCurrentRoute(route)
         setDirections(route)
         
-        // 경로 좌표 저장
+        // 경로 좌표 저장 (개선된 파싱)
         const routeCoords: any[] = []
-        route.sections.forEach((section: any) => {
-          section.roads.forEach((road: any) => {
-            road.vertexes.forEach((vertex: number, index: number) => {
-              if (index % 2 === 0) {
-                const lng = vertex
-                const lat = road.vertexes[index + 1]
-                routeCoords.push(new window.kakao.maps.LatLng(lat, lng))
-              }
-            })
+        
+        console.log('경로 데이터 파싱 시작:', route)
+        
+        if (route.sections && route.sections.length > 0) {
+          route.sections.forEach((section: any, sectionIndex: number) => {
+            console.log(`Section ${sectionIndex}:`, section)
+            
+            if (section.roads && section.roads.length > 0) {
+              section.roads.forEach((road: any, roadIndex: number) => {
+                console.log(`Road ${roadIndex}:`, road)
+                
+                if (road.vertexes && road.vertexes.length > 0) {
+                  // vertexes는 [lng, lat, lng, lat, ...] 형태로 저장됨
+                  for (let i = 0; i < road.vertexes.length; i += 2) {
+                    const lng = road.vertexes[i]
+                    const lat = road.vertexes[i + 1]
+                    
+                    if (lng !== undefined && lat !== undefined) {
+                      routeCoords.push(new window.kakao.maps.LatLng(lat, lng))
+                    }
+                  }
+                }
+              })
+            }
           })
-        })
+        }
+        
+        console.log('파싱된 경로 좌표 개수:', routeCoords.length)
         setRoutePath(routeCoords)
 
         // 기존 경로 제거
@@ -639,25 +858,55 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
           routeOverlay.setMap(null)
         }
 
-        // 새 경로 표시
-        const polyline = new window.kakao.maps.Polyline({
-          path: routeCoords,
-          strokeWeight: mode === 'driving' ? 8 : 5, // 자동차 모드에서는 더 굵은 선
-          strokeColor: mode === 'driving' ? '#1E88E5' : '#FF5722', // 자동차는 파란색, 도보는 주황색
-          strokeOpacity: 0.8,
-          strokeStyle: 'solid'
-        })
+        // 경로가 있는 경우에만 표시
+        if (routeCoords.length > 0) {
+          console.log('경로 선 그리기:', routeCoords.length, '개 좌표')
+          
+          // 새 경로 표시 (도보 전용)
+          const polyline = new window.kakao.maps.Polyline({
+            path: routeCoords,
+            strokeWeight: 6, // 도보용 굵은 선
+            strokeColor: '#FF5722', // 도보는 주황색
+            strokeOpacity: 0.9,
+            strokeStyle: 'solid'
+          })
 
-        polyline.setMap(map)
-        setRouteOverlay(polyline)
-
-        // 네비게이션 시작 시 현재 위치 중심으로 확대 (모든 모드)
-        if (mode === 'driving') {
-          map.setLevel(2) // 차량: 매우 확대
-          map.setCenter(new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng))
+          polyline.setMap(map)
+          setRouteOverlay(polyline)
+          
+          console.log('경로 선이 지도에 추가되었습니다')
+          
+          // 경로 전체가 보이도록 지도 범위 조정
+          const bounds = new window.kakao.maps.LatLngBounds()
+          routeCoords.forEach(coord => bounds.extend(coord))
+          
+          // 현재 위치도 범위에 포함
+          if (userLocation) {
+            bounds.extend(new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng))
+          }
+          
+          // 목적지도 범위에 포함
+          bounds.extend(new window.kakao.maps.LatLng(cafe.latitude, cafe.longitude))
+          
+          // 지도 범위 설정 (약간의 여백 추가)
+          map.setBounds(bounds, 50)
+          
+          console.log('지도 범위가 조정되었습니다')
         } else {
-          // 도보 모드: 차량보다는 덜 확대하지만 네비게이션 모드로 확대
-          map.setLevel(3) // 도보: 적당히 확대
+          console.log('경로 좌표가 없어 선을 그릴 수 없습니다')
+        }
+
+        // 네비게이션 시작 시 지도 설정 (도보 전용)
+        if (routeCoords.length > 0) {
+          // 경로가 있으면 경로 전체가 보이도록 범위 설정 후 현재 위치 중심으로
+          setTimeout(() => {
+            map.setLevel(2) // 도보: 가까이 확대
+            map.setCenter(new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng))
+            console.log('네비게이션 시작: 현재 위치 중심으로 설정')
+          }, 1000)
+        } else {
+          // 경로가 없으면 바로 현재 위치 중심으로
+          map.setLevel(2)
           map.setCenter(new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng))
         }
 
@@ -668,6 +917,19 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
         startLocationTracking()
         
         console.log(`${mode === 'driving' ? '자동차' : '도보'} 길찾기 성공:`, route)
+        
+        // 안내 정보 로그 출력 (디버깅용)
+        if (route.sections && route.sections.length > 0) {
+          route.sections.forEach((section: any, index: number) => {
+            if (section.guides && section.guides.length > 0) {
+              console.log(`Section ${index} 안내 정보:`, section.guides.map((guide: any) => ({
+                type: guide.guidance_type,
+                text: guide.guidance_text,
+                distance: guide.distance
+              })))
+            }
+          })
+        }
       } else {
         throw new Error("경로를 찾을 수 없습니다.")
       }
@@ -706,6 +968,51 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     return (θ * 180 / Math.PI + 360) % 360 // 0-360도로 정규화
   }
 
+  // 현재 안내 단계 업데이트 (GPS 위치 기반)
+  const updateCurrentStep = (currentLocation: {lat: number, lng: number}) => {
+    if (!currentRoute || !currentRoute.sections) return
+
+    let totalDistance = 0
+    let currentStepIndex = 0
+    
+    // 각 section의 guides를 순회하며 현재 위치에 가장 가까운 안내 단계 찾기
+    for (let sectionIndex = 0; sectionIndex < currentRoute.sections.length; sectionIndex++) {
+      const section = currentRoute.sections[sectionIndex]
+      
+      if (section.guides && section.guides.length > 0) {
+        for (let guideIndex = 0; guideIndex < section.guides.length; guideIndex++) {
+          const guide = section.guides[guideIndex]
+          
+          // 안내 지점의 좌표 (첫 번째 road의 첫 번째 vertex 사용)
+          if (section.roads && section.roads.length > 0) {
+            const road = section.roads[0]
+            if (road.vertexes && road.vertexes.length >= 2) {
+              const guideLat = road.vertexes[1] // 두 번째 값이 위도
+              const guideLng = road.vertexes[0] // 첫 번째 값이 경도
+              
+              const distanceToGuide = getDistance(
+                currentLocation.lat, currentLocation.lng,
+                guideLat, guideLng
+              )
+              
+              // 안내 지점에서 50m 이내에 있으면 다음 단계로 이동
+              if (distanceToGuide <= 50) {
+                currentStepIndex = sectionIndex
+                break
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // 현재 단계가 변경되었으면 업데이트
+    if (currentStepIndex !== currentStep) {
+      setCurrentStep(currentStepIndex)
+      console.log(`안내 단계 업데이트: ${currentStep} → ${currentStepIndex}`)
+    }
+  }
+
   // 경로 이탈 체크 및 재계산
   const checkRouteDeviation = async (currentLocation: {lat: number, lng: number}, targetCafe: CafeLocation) => {
     if (!routePath || routePath.length === 0) return
@@ -725,23 +1032,59 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
       }
     })
 
-    // 경로에서 50미터 이상 벗어났으면 재계산
-    if (minDistance > 50) {
+    // 경로에서 10미터 이상 벗어났으면 재계산
+    if (minDistance > 10) {
       console.log('경로 이탈 감지! 새로운 경로를 계산합니다...')
       
-      if (navigationMode === 'driving' && 'speechSynthesis' in window) {
-        speakInstruction('경로에서 이탈했습니다. 새로운 경로를 계산중입니다.')
-      }
+      // 도보 모드에서는 음성 안내 비활성화
+      console.log('경로에서 이탈했습니다. 새로운 경로를 계산중입니다.')
       
-      // 현재 위치에서 목적지까지 새 경로 계산
-      await showDirectionsOnMap(targetCafe, navigationMode)
+      // 현재 위치에서 목적지까지 새 경로 계산 (도보 전용)
+      await showDirectionsOnMap(targetCafe, 'walking')
     }
   }
 
   // 카카오지도 앱으로 연결 (출발지: 내 위치, 목적지: 카페)
   const openKakaoMap = (cafe: CafeLocation) => {
+    // 카카오지도로 넘어가기 전에 현재 네비게이션 완전 종료
+    if (isNavigating) {
+      // 네비게이션 상태 모두 정리
+      setIsNavigating(false)
+      setIsFullscreenNav(false)
+      setCurrentRoute(null)
+      setCurrentStep(0)
+      setRemainingDistance(0)
+      setRemainingTime(0)
+      setNavigationStartTime(null)
+      setIsDestinationReached(false)
+      setAutoEndTimer(null)
+      
+      // 위치 추적 중지
+      stopLocationTracking()
+      
+      // 경로 오버레이 제거
+      if (routeOverlay && map) {
+        routeOverlay.setMap(null)
+        setRouteOverlay(null)
+      }
+      
+      // 선택된 카페 해제
+      setSelectedCafeId(null)
+      onCafeSelect?.(null)
+    }
+
+    // 위치 정보가 없으면 새로 요청
     if (!userLocation) {
-      alert('현재 위치를 찾을 수 없습니다. 위치 권한을 허용해주세요.')
+      const confirmRetry = confirm('현재 위치를 찾을 수 없습니다. 위치 권한을 허용하고 다시 시도하시겠습니까?')
+      if (confirmRetry) {
+        requestLocation()
+        // 잠시 후 다시 시도
+        setTimeout(() => {
+          if (userLocation) {
+            openKakaoMap(cafe)
+          }
+        }, 2000)
+      }
       return
     }
 
@@ -750,35 +1093,36 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
     const endLat = cafe.latitude
     const endLng = cafe.longitude
     const destName = encodeURIComponent(`${cafe.store} ${cafe.store_name}`)
+    const startName = encodeURIComponent('카핏앱 현재위치')
     
-    // 카카오지도 앱 URL 스킴 (길찾기)
+    // 카카오지도 앱 URL 스킴 (길찾기) - 출발지 좌표 포함
     const kakaoMapUrl = `kakaomap://route?sp=${startLat},${startLng}&ep=${endLat},${endLng}&by=FOOT`
     
-    // 웹 카카오지도 길찾기 URL (출발지: 현재위치, 목적지: 카페)
-    const webKakaoMapUrl = `https://map.kakao.com/link/to/${destName},${endLat},${endLng}?from=현재위치,${startLat},${startLng}`
+    // 웹 카카오지도 길찾기 URL - 출발지 좌표를 명시적으로 설정
+    const webKakaoMapUrl = `https://map.kakao.com/link/to/${destName},${endLat},${endLng}?from=${startName},${startLat},${startLng}`
     
     // 모바일에서는 앱 연결 시도, 실패하면 웹으로
     if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      // 모바일: 앱에서 길찾기 시도
-      window.location.href = kakaoMapUrl
+      // 모바일: 앱 스킴 시도 후 바로 웹으로 fallback
+      const iframe = document.createElement('iframe')
+      iframe.style.display = 'none'
+      iframe.src = kakaoMapUrl
+      document.body.appendChild(iframe)
       
-      // 3초 후 앱이 안 열리면 웹으로 이동
+      // 즉시 iframe 제거하고 웹으로 이동
       setTimeout(() => {
+        document.body.removeChild(iframe)
         window.open(webKakaoMapUrl, '_blank')
-      }, 3000)
+      }, 500) // 0.5초 후 웹으로 이동
     } else {
       // 데스크톱: 웹 카카오지도로 바로 이동
       window.open(webKakaoMapUrl, '_blank')
     }
   }
 
-  // 길찾기 함수 (지도 내에서 처리) - 이제 사용되지 않음
-  const openDirections = (cafe: CafeLocation, mode: 'walking' | 'driving' = 'walking') => {
-    if (mode === 'walking') {
-      startWalkingNavigation(cafe)
-    } else {
-      startDrivingNavigation(cafe)
-    }
+  // 길찾기 함수 (지도 내에서 처리) - 도보만 지원
+  const openDirections = (cafe: CafeLocation) => {
+    startWalkingNavigation(cafe)
   }
 
   // 클라이언트 사이드에서만 렌더링
@@ -816,7 +1160,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
             <div className="text-6xl mb-4">🎯</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">목적지 도착!</h2>
             <p className="text-gray-600 mb-4">
-              {autoEndTimer ? '10초 후 자동으로 안내가 종료됩니다.' : '안내가 종료되었습니다.'}
+              {autoEndTimer ? '5초 후 자동으로 안내가 종료됩니다.' : '안내가 종료되었습니다.'}
             </p>
             <div className="flex gap-2">
               <button
@@ -836,22 +1180,21 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
         </div>
       )}
 
-      {/* 전체화면 차량 네비게이션 */}
-      {isFullscreenNav && isNavigating && navigationMode === 'driving' && !isDestinationReached && (
+      {/* 전체화면 네비게이션 (차량/도보 모두) */}
+      {isFullscreenNav && isNavigating && !isDestinationReached && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           {/* 헤더 */}
-                      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold">🚗 카핏네비</h1>
-                <div className="text-sm opacity-90">
-                  {Math.round(remainingDistance)}m • {remainingTime}분
-                </div>
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold">
+                🚶‍♀️ 카핏네비
+              </h1>
+              <div className="text-sm opacity-90">
+                {Math.round(remainingDistance)}m • {remainingTime}분
               </div>
+            </div>
             <button
-              onClick={() => {
-                setIsFullscreenNav(false)
-                stopNavigation()
-              }}
+              onClick={stopNavigation}
               className="text-white hover:text-red-300 text-xl"
             >
               ✕
@@ -879,7 +1222,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
                 }
               }}
             >
-              {/* 사용자 현재 위치 마커 - 모드별 다른 디자인 */}
+              {/* 사용자 현재 위치 마커 - 도보 전용 */}
               {userLocation && (
                 <MapMarker
                   position={userLocation}
@@ -887,22 +1230,14 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
                   src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <!-- 외부 원 (GPS 신호) -->
-                      <circle cx="16" cy="16" r="14" fill="${navigationMode === 'driving' ? '#2196F3' : '#2196F3'}" fill-opacity="0.3" stroke="${navigationMode === 'driving' ? '#2196F3' : '#2196F3'}" stroke-width="1"/>
+                      <circle cx="16" cy="16" r="14" fill="#FF5722" fill-opacity="0.3" stroke="#FF5722" stroke-width="1"/>
                       <!-- 내부 원 (위치) -->
-                      <circle cx="16" cy="16" r="8" fill="${navigationMode === 'driving' ? '#2196F3' : '#2196F3'}" stroke="#FFFFFF" stroke-width="2"/>
+                      <circle cx="16" cy="16" r="8" fill="#FF5722" stroke="#FFFFFF" stroke-width="2"/>
                       <!-- 중심점 -->
                       <circle cx="16" cy="16" r="3" fill="#FFFFFF"/>
-                      <!-- 방향 표시 -->
+                      <!-- 도보 화살표 -->
                       <g transform="rotate(${userHeading} 16 16)">
-                        ${navigationMode === 'driving' ? 
-                          `<!-- 차량 모양 -->
-                           <rect x="12" y="8" width="8" height="12" rx="2" fill="#FFFFFF" stroke="#2196F3" stroke-width="1"/>
-                           <rect x="13" y="10" width="6" height="3" fill="#2196F3"/>
-                           <circle cx="14" cy="18" r="1.5" fill="#2196F3"/>
-                           <circle cx="18" cy="18" r="1.5" fill="#2196F3"/>` :
-                          `<!-- 도보 화살표 -->
-                           <path d="M16 6 L20 14 L16 12 L12 14 Z" fill="#FFFFFF" stroke="#2196F3" stroke-width="1"/>`
-                        }
+                        <path d="M16 6 L20 14 L16 12 L12 14 Z" fill="#FFFFFF" stroke="#FF5722" stroke-width="1"/>
                       </g>
                     </svg>
                   `),
@@ -958,13 +1293,8 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
               )}
             </div>
             
-            {/* 속도계 (오른쪽 위) */}
-            <div className="absolute top-4 right-4 bg-black/80 text-white p-4 rounded-xl">
-              <div className="text-center mb-2">
-                <div className="text-3xl font-bold">0</div>
-                <div className="text-xs opacity-75">km/h</div>
-              </div>
-              {/* 위치 추적 상태 표시 */}
+            {/* GPS 상태 표시 */}
+            <div className="absolute top-4 right-4 bg-black/80 text-white p-3 rounded-xl">
               <div className="flex items-center justify-center gap-1">
                 <div className={`w-2 h-2 rounded-full ${isTrackingLocation ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
                 <div className="text-xs opacity-75">GPS</div>
@@ -973,11 +1303,11 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
           </div>
           
           {/* 하단 네비게이션 패널 */}
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4">
+          <div className="bg-gradient-to-r from-orange-800 to-orange-900 text-white p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4 flex-1">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-2xl">
-                  🚗
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl bg-gradient-to-br from-orange-500 to-orange-600">
+                  🚶‍♀️
                 </div>
                 <div className="flex-1">
                   <div className="font-bold text-xl mb-1">
@@ -991,12 +1321,6 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
               </div>
               
               <div className="flex gap-2">
-                <button
-                  onClick={() => speakInstruction(getInstructionText(currentRoute, currentStep))}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 p-3 rounded-full hover:from-purple-500 hover:to-blue-500 transition-all"
-                >
-                  🔊
-                </button>
                 <button
                   onClick={stopNavigation}
                   className="bg-red-600 p-3 rounded-full hover:bg-red-500 transition-all"
@@ -1015,11 +1339,48 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
               </div>
               <div className="w-full bg-gray-700 rounded-full h-3">
                 <div 
-                  className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-500 shadow-lg"
+                  className="h-3 rounded-full transition-all duration-500 shadow-lg bg-gradient-to-r from-orange-500 to-orange-600"
                   style={{ 
                     width: `${Math.round(((currentRoute?.summary?.distance - remainingDistance) / currentRoute?.summary?.distance) * 100)}%` 
                   }}
                 ></div>
+              </div>
+            </div>
+            
+            {/* 전체 경로 카드 표시 */}
+            <div className="mt-4 bg-white/10 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold">전체 경로</h4>
+                <span className="text-xs opacity-75">총 {getAllRouteInstructions(currentRoute).length}단계</span>
+              </div>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {getAllRouteInstructions(currentRoute).slice(0, 5).map((instruction, index) => (
+                  <div 
+                    key={instruction.id}
+                    className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                      index === currentStep 
+                        ? 'bg-orange-400/30 border border-orange-400/50' 
+                        : 'bg-white/10 hover:bg-white/20'
+                    }`}
+                  >
+                    <div className={`text-sm ${index === currentStep ? 'animate-pulse' : ''}`}>
+                      {instruction.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-xs font-medium ${
+                        index === currentStep ? 'text-orange-200' : 'text-white/90'
+                      }`}>
+                        {instruction.text}
+                        {instruction.distance > 0 && ` (${instruction.distance}m)`}
+                      </div>
+                    </div>
+                    {index < currentStep && (
+                      <div className="text-green-400 text-xs">
+                        ✓
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1148,7 +1509,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
             }
           }}
         >
-          {/* 사용자 현재 위치 마커 - 모드별 다른 디자인 */}
+          {/* 사용자 현재 위치 마커 - 도보 전용 */}
           {userLocation && (
             <MapMarker
               position={userLocation}
@@ -1156,22 +1517,14 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
               src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <!-- 외부 원 (GPS 신호) -->
-                  <circle cx="16" cy="16" r="14" fill="${navigationMode === 'driving' ? '#2196F3' : '#2196F3'}" fill-opacity="0.3" stroke="${navigationMode === 'driving' ? '#2196F3' : '#2196F3'}" stroke-width="1"/>
+                  <circle cx="16" cy="16" r="14" fill="#2196F3" fill-opacity="0.3" stroke="#2196F3" stroke-width="1"/>
                   <!-- 내부 원 (위치) -->
-                  <circle cx="16" cy="16" r="8" fill="${navigationMode === 'driving' ? '#2196F3' : '#2196F3'}" stroke="#FFFFFF" stroke-width="2"/>
+                  <circle cx="16" cy="16" r="8" fill="#2196F3" stroke="#FFFFFF" stroke-width="2"/>
                   <!-- 중심점 -->
                   <circle cx="16" cy="16" r="3" fill="#FFFFFF"/>
-                  <!-- 방향 표시 -->
+                  <!-- 도보 화살표 -->
                   <g transform="rotate(${userHeading} 16 16)">
-                    ${navigationMode === 'driving' ? 
-                      `<!-- 차량 모양 -->
-                       <rect x="12" y="8" width="8" height="12" rx="2" fill="#FFFFFF" stroke="#2196F3" stroke-width="1"/>
-                       <rect x="13" y="10" width="6" height="3" fill="#2196F3"/>
-                       <circle cx="14" cy="18" r="1.5" fill="#2196F3"/>
-                       <circle cx="18" cy="18" r="1.5" fill="#2196F3"/>` :
-                      `<!-- 도보 화살표 -->
-                       <path d="M16 6 L20 14 L16 12 L12 14 Z" fill="#FFFFFF" stroke="#2196F3" stroke-width="1"/>`
-                    }
+                    <path d="M16 6 L20 14 L16 12 L12 14 Z" fill="#FFFFFF" stroke="#2196F3" stroke-width="1"/>
                   </g>
                 </svg>
               `),
@@ -1218,67 +1571,7 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
           </Map>
       </div>
       
-      {/* 네비게이션 정보 패널 (도보 모드 전용) */}
-      {isNavigating && currentRoute && navigationMode === 'walking' && !isFullscreenNav && (
-        <div className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold flex items-center gap-2">
-              🚶‍♀️ 도보 네비게이션
-              {/* GPS 상태 표시 */}
-              <div className="flex items-center gap-1 ml-2">
-                <div className={`w-2 h-2 rounded-full ${isTrackingLocation ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-                <span className="text-xs opacity-75">GPS</span>
-              </div>
-            </h3>
-            <button
-              onClick={stopNavigation}
-              className="text-white hover:text-red-200 transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            {/* 현재 안내 */}
-            <div className="bg-white/20 rounded-lg p-4">
-              <div className="text-2xl font-bold mb-2 flex items-center gap-2">
-                🧭 {getInstructionText(currentRoute, currentStep)}
-              </div>
-              <div className="text-sm opacity-90 mb-2">
-                {getNextInstructionText(currentRoute, currentStep)}
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span>남은 거리: {Math.round(remainingDistance)}m</span>
-                <span>예상 시간: {remainingTime}분</span>
-              </div>
-            </div>
-            
-            {/* 네비게이션 컨트롤 */}
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => speakInstruction(getInstructionText(currentRoute, currentStep))}
-                className="bg-white/20 px-3 py-2 rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
-              >
-                🔊 다시 듣기
-              </button>
-              <button
-                onClick={stopNavigation}
-                className="bg-red-500/80 px-3 py-2 rounded-lg hover:bg-red-500 transition-colors text-sm font-medium"
-              >
-                🚫 안내종료
-              </button>
-              <button
-                onClick={() => window.location.href = '/find_location'}
-                className="bg-gray-500/80 px-3 py-2 rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium"
-              >
-                🗺️ 지도로
-              </button>
-            </div>
-            
-
-          </div>
-        </div>
-      )}
+      {/* 네비게이션 정보 패널 (제거됨 - 전체화면 네비게이션만 사용) */}
       
       {/* 카페 목록 */}
       <div className="mt-4">
@@ -1308,23 +1601,10 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0 mr-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <img 
-                      src={getCafeLogoUrl(cafe.store || cafe.store_name)}
-                      alt={cafe.store_name}
-                      className="w-4 h-4 flex-shrink-0 object-contain"
-                      onError={(e) => {
-                        // 로고 로드 실패시 색상 원으로 대체
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        const parent = target.parentElement
-                        if (parent) {
-                          const colorDiv = document.createElement('div')
-                          colorDiv.className = 'w-3 h-3 rounded-full flex-shrink-0'
-                          colorDiv.style.backgroundColor = getMarkerColor(cafe.store_name)
-                          parent.insertBefore(colorDiv, target)
-                        }
-                      }}
-                    />
+                    <div 
+                      className="w-4 h-4 flex-shrink-0 rounded-full"
+                      style={{ backgroundColor: getMarkerColor(cafe.store || cafe.store_name) }}
+                    ></div>
                     <span className="font-medium text-[#5D4037] break-words">
                       {cafe.store} {cafe.store_name}
                       {cafe.store_type && (
@@ -1349,33 +1629,61 @@ export default function KakaoMapWrapper({ onCafeSelect }: KakaoMapWrapperProps) 
                 
                 <div className="flex-shrink-0">
                   <div className="text-xs text-gray-500 font-medium mb-2 text-center">길찾기</div>
-                  {/* 도보/차량 버튼을 한 줄로 */}
-                  <div className="flex gap-2 mb-3">
-                    <button 
-                      className="px-3 py-1.5 bg-orange-500 text-white text-xs rounded hover:bg-orange-600 transition-colors whitespace-nowrap"
-                      onClick={(e) => {
-                        e.stopPropagation()
+                  {/* 도보 버튼 */}
+                  <button 
+                    className="w-full px-3 py-2 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors font-medium mb-2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      
+                      // 이미 같은 카페로 네비게이션 중이면 무시
+                      if (isNavigating && targetCafe?.id === cafe.id) {
+                        console.log('이미 해당 카페로 네비게이션 중입니다.')
+                        return
+                      }
+                      
+                      // 기존 네비게이션 정리 후 도보 네비게이션 시작
+                      if (isNavigating) {
+                        console.log('기존 네비게이션 정리 중...')
+                        setIsNavigating(false)
+                        setIsFullscreenNav(false)
+                        setCurrentRoute(null)
+                        setCurrentStep(0)
+                        clearRoute()
+                        
+                        // 정리 완료 후 새로운 네비게이션 시작
+                        setTimeout(() => {
+                          console.log('새로운 도보 네비게이션 시작')
+                          startWalkingNavigation(cafe)
+                        }, 200)
+                      } else {
+                        console.log('도보 네비게이션 시작')
                         startWalkingNavigation(cafe)
-                      }}
-                    >
-                      🚶‍♀️ 도보
-                    </button>
-                    <button 
-                      className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors whitespace-nowrap"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        startDrivingNavigation(cafe)
-                      }}
-                    >
-                      🚗 차량
-                    </button>
-                  </div>
+                      }
+                    }}
+                  >
+                    🚶‍♀️ 도보
+                  </button>
                   {/* 카카오지도 연결 버튼 */}
                   <button 
                     className="w-full px-3 py-2 bg-yellow-400 text-black text-xs rounded hover:bg-yellow-500 transition-colors font-medium"
                     onClick={(e) => {
                       e.stopPropagation()
-                      openKakaoMap(cafe)
+                      // 네비게이션 중이면 먼저 완전히 정리
+                      if (isNavigating) {
+                        console.log('네비게이션 정리 중...')
+                        setIsNavigating(false)
+                        setIsFullscreenNav(false)
+                        setCurrentRoute(null)
+                        setCurrentStep(0)
+                        clearRoute()
+                        
+                        // 정리 완료 후 카카오지도 연결
+                        setTimeout(() => {
+                          openKakaoMap(cafe)
+                        }, 100)
+                      } else {
+                        openKakaoMap(cafe)
+                      }
                     }}
                   >
                     🗺️ 카카오지도

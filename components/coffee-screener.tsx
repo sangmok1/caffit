@@ -538,7 +538,7 @@ function CoffeeScreener() {
         {/* Navigation */}
         <div className="relative mb-8">
           {/* 모바일 햄버거 메뉴 */}
-          <div className="md:hidden absolute left-0 -top-8 z-10">
+          <div className="md:hidden absolute left-0 -top-4 z-10">
             <div className="relative">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

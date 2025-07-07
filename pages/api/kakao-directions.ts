@@ -41,7 +41,7 @@ export default async function handler(
       destination: `${destination.x},${destination.y}`,
       priority,
       alternatives: String(alternatives),
-      road_details: String(road_details)
+      road_details: String(true) // 상세 도로 정보 항상 요청
     })
 
     // 차량 관련 옵션 (제공된 경우에만 추가)
